@@ -10,15 +10,19 @@ if [ ! -f .env ]; then
   exit 1
 fi
 
-set -a
-# shellcheck disable=SC1091
-. ./.env
-set +a
+# Do NOT `source` .env — secrets often contain $, (), & that break the shell.
+env_get() {
+  # KEY=value → value (first = only); strip CR and surrounding quotes
+  grep -E "^${1}=" .env | head -n1 | cut -d= -f2- | tr -d '\r' | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//"
+}
+
+DOMAIN="$(env_get DOMAIN)"
+SSL_EMAIL="$(env_get SSL_EMAIL)"
 
 DOMAIN="${DOMAIN:-systema.site}"
 EMAIL="${SSL_EMAIL:-admin@${DOMAIN}}"
 
-echo "Requesting certificate for ${DOMAIN}..."
+echo "Requesting certificate for ${DOMAIN} (email: ${EMAIL})..."
 
 docker compose run --rm --entrypoint certbot certbot certonly \
   --webroot \
