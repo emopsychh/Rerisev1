@@ -16,12 +16,37 @@ class GroupAdmin(BaseGroupAdmin, ModelAdmin):
 
 @admin.register(User)
 class UserAdmin(ModelAdmin):
-    section_description = "Учётные записи людей в системе. Здесь можно найти пользователя, заблокировать доступ или снова его открыть."
-    list_display = ("email", "phone", "is_active", "is_staff", "created_at")
-    search_fields = ("email", "phone", "profile__public_id")
+    section_description = (
+        "Учётные записи людей в системе. Здесь можно найти пользователя, "
+        "заблокировать доступ или снова его открыть. "
+        "«Пригласивший» заполняется автоматически при регистрации по рефссылке "
+        "(не вручную). Пусто = регистрировались без кода или код не дошёл."
+    )
+    list_display = (
+        "email",
+        "phone",
+        "invited_by",
+        "is_active",
+        "is_staff",
+        "created_at",
+    )
+    search_fields = ("email", "phone", "profile__public_id", "invited_by__email")
     list_filter = ("is_active", "is_staff", "created_at")
+    readonly_fields = ("created_at", "updated_at", "last_login_at", "invited_by")
     actions = ["block_users", "unblock_users"]
-    readonly_fields = ("created_at", "updated_at", "last_login_at")
+    fields = (
+        "email",
+        "phone",
+        "invited_by",
+        "is_active",
+        "is_staff",
+        "is_superuser",
+        "groups",
+        "user_permissions",
+        "last_login_at",
+        "created_at",
+        "updated_at",
+    )
 
     @admin.action(description="Заблокировать пользователей")
     def block_users(self, request, queryset):
