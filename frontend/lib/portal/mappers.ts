@@ -2,7 +2,7 @@
 
 import { BookOpen, FileText } from "lucide-react";
 import type { CourseModuleItem, CrmColumn, CrmDeal } from "./types";
-import { chatGptCurriculum, courseTopicSeeds, courses, crmColumns, materialCards } from "./mock-data";
+import { chatGptCurriculum, courseTopicSeeds, courses } from "./mock-data";
 import { formatApiDate, formatLeadTime } from "./format";
 import { routeSlug } from "./routing";
 
@@ -51,11 +51,11 @@ export function mapApiProgramToCourse(program: Record<string, unknown>) {
   return {
     slug,
     title,
-    subtitle: String(program.description || mock?.subtitle || ""),
+    subtitle: String(program.description || ""),
     progress: Number(progressObj?.percent ?? 0),
     color: mock?.color ?? "blue",
     icon: mock?.icon ?? BookOpen,
-    lessons: Number(program.lesson_count ?? mock?.lessons ?? 0),
+    lessons: Number(program.lesson_count ?? 0),
   };
 }
 
@@ -67,16 +67,19 @@ export function materialsFromApi(materials: unknown) {
   if (!data?.categories?.length) return null;
   const items = data.categories.flatMap((category) =>
     category.groups.map((group) => {
-      const mock = materialCards.find((item) => item.title === group.title);
+      const title = String(group.title || "");
+      const id = Number(group.id);
       return {
-        title: String(group.title),
-        text: String(group.description || mock?.text || ""),
+        id,
+        title,
+        slug: routeSlug(title),
+        text: String(group.description || ""),
         count: Number(group.file_count ?? 0),
-        updated: group.last_updated ? formatApiDate(group.last_updated, mock?.updated ?? "Сегодня") : (mock?.updated ?? "Сегодня"),
+        updated: group.last_updated ? formatApiDate(group.last_updated, "—") : "—",
         category: category.name,
-        kind: String(group.file_type || mock?.kind || "DOC"),
-        color: mock?.color ?? "blue",
-        icon: mock?.icon ?? FileText,
+        kind: String(group.file_type || "DOC"),
+        color: "blue",
+        icon: FileText,
       };
     }),
   );
@@ -90,22 +93,16 @@ export function createNewCrmLead(id: string): CrmDeal {
     source: "Ручное добавление",
     task: "Уточнить интерес",
     time: "Сегодня",
-    phone: "+7 900 000-00-00",
-    contact: "@new_lead",
-    note: "Новая карточка. Добавьте контекст после первого контакта.",
-    email: "Не указан",
+    phone: "",
+    contact: "",
+    note: "",
+    email: "",
     createdAt: "Сегодня",
   };
 }
 
-export function crmColumnsForRoute(dealId?: string | null): CrmColumn[] {
-  if (!dealId || crmColumns.some((column) => column.deals.some((deal) => deal.id === dealId))) return crmColumns;
-  if (!/^lead-\d+$/.test(dealId)) return crmColumns;
-
-  const routedLead = createNewCrmLead(dealId);
-  return crmColumns.map((column) => (
-    column.id === "new" ? { ...column, deals: [routedLead, ...column.deals] } : column
-  ));
+export function crmColumnsForRoute(_dealId?: string | null): CrmColumn[] {
+  return emptyCrmColumns;
 }
 
 export function buildCourseCurriculum(course: (typeof courses)[number]): CourseModuleItem[] {

@@ -6,7 +6,7 @@ import { CalendarDays, CheckCircle2, History, ListChecks, MessageSquareText, Pho
 import { usePortalBackend } from "../../../lib/auth/PortalBackendProvider";
 import { createLead, updateLead } from "../../../lib/api/crm";
 import { ApiError } from "../../../lib/api/types";
-import { createNewCrmLead, emptyCrmColumns, crmColumnsFromApi, formatCrmPhone } from "../../../lib/portal";
+import { emptyCrmColumns, crmColumnsFromApi, formatCrmPhone } from "../../../lib/portal";
 import type { CrmColumn, CrmDeal, CrmTimelineNote, NotifyFn, TFn } from "../../../lib/portal";
 import { PageShell } from "../shared/PageShell";
 import { PortalLoading } from "../shared/PortalLoading";
@@ -47,10 +47,10 @@ export function CrmView({ t, notify }: { t: TFn; notify: NotifyFn }) {
       if (routedDeal) setDraftDeal({
         ...routedDeal,
         email: routedDeal.email ?? "Не указан",
-        createdAt: routedDeal.createdAt ?? "12 июля 2026",
+        createdAt: routedDeal.createdAt ?? "—",
       });
     }
-  }, [pathname]);
+  }, [pathname, columns]);
 
   const closeDeal = () => {
     if (isDealClosing) return;
@@ -102,9 +102,23 @@ export function CrmView({ t, notify }: { t: TFn; notify: NotifyFn }) {
           note: "",
         }) as Record<string, unknown>;
         await reload();
-        const leadId = String(created.id || `lead-${Date.now()}`);
-        const lead = createNewCrmLead(leadId);
-        lead.name = String(created.name || lead.name);
+        const leadId = String(created.id || "");
+        if (!leadId) {
+          notify(t("Лид создан"));
+          return;
+        }
+        const lead: CrmDeal = {
+          id: leadId,
+          name: String(created.name || "Новый контакт"),
+          source: String(created.source || "Вручную"),
+          task: String(created.task || ""),
+          time: String(created.time || "Сегодня"),
+          phone: String(created.phone || ""),
+          contact: String(created.contact || ""),
+          note: String(created.note || ""),
+          email: created.email ? String(created.email) : "",
+          createdAt: "Сегодня",
+        };
         setIsDealClosing(false);
         setColumns((currentColumns) => currentColumns.map((column) => (
           column.id === "new" ? { ...column, deals: [lead, ...column.deals.filter((deal) => deal.id !== lead.id)] } : column
@@ -114,15 +128,7 @@ export function CrmView({ t, notify }: { t: TFn; notify: NotifyFn }) {
         setNewTimelineNote("");
         window.history.pushState(null, "", `/crm/deals/${lead.id}`);
       } catch (err) {
-        const lead = createNewCrmLead(`lead-${Date.now()}`);
-        setIsDealClosing(false);
-        setColumns((currentColumns) => currentColumns.map((column) => (
-          column.id === "new" ? { ...column, deals: [lead, ...column.deals] } : column
-        )));
-        setSelectedDealId(lead.id);
-        setDraftDeal(lead);
-        window.history.pushState(null, "", `/crm/deals/${lead.id}`);
-        notify(err instanceof ApiError ? err.message : t("Локальный черновик лида создан"));
+        notify(err instanceof ApiError ? err.message : t("Не удалось создать лид"));
       }
     })();
   };
@@ -134,7 +140,7 @@ export function CrmView({ t, notify }: { t: TFn; notify: NotifyFn }) {
     setDraftDeal({
       ...deal,
       email: deal.email ?? "Не указан",
-      createdAt: deal.createdAt ?? "12 июля 2026",
+      createdAt: deal.createdAt ?? "—",
     });
     window.history.pushState(null, "", `/crm/deals/${deal.id}`);
   };

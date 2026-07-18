@@ -9,7 +9,6 @@ import {
   courses,
   extractProgramList,
   mapApiProgramToCourse,
-  marketPrograms,
   promoBanners,
   routeSlug,
 } from "../../../lib/portal";
@@ -61,16 +60,17 @@ export function HomeView({ setActive, openCourse, openAiHub, t, notify }: { setA
   const homePrograms = apiPrograms.length
     ? apiPrograms.map((program) => {
         const mapped = mapApiProgramToCourse(program);
-        const mockProgram = marketPrograms.find((item) => item.title === mapped.title || routeSlug(item.title) === String(program.slug || ""));
+        const accessStatus = String(program.access_status || "locked");
+        const hasAccess = accessStatus !== "locked";
         return {
           title: mapped.title,
           text: mapped.subtitle,
           icon: mapped.icon,
           color: mapped.color,
-          badge: Array.isArray(program.tags) && program.tags.length ? String(program.tags[0]) : mockProgram?.badge,
+          badge: Array.isArray(program.tags) && program.tags.length ? String(program.tags[0]) : undefined,
           course: mapped,
-          // Демо: опубликованные программы открываем сразу (без «условия доступа уточняются»).
-          hasAccess: true,
+          hasAccess,
+          accessStatus,
         };
       })
     : [];
@@ -78,16 +78,18 @@ export function HomeView({ setActive, openCourse, openAiHub, t, notify }: { setA
     const matchesQuery = `${program.title} ${program.text}`.toLowerCase().includes(courseQuery.toLowerCase());
     const matchesFilter =
       courseFilter === "all" ||
-      (courseFilter === "owned" && program.hasAccess && (program.course?.progress ?? 0) < 100) ||
+      (courseFilter === "owned" && program.hasAccess && program.accessStatus !== "completed" && (program.course?.progress ?? 0) < 100) ||
       (courseFilter === "available" && !program.hasAccess) ||
-      (courseFilter === "completed" && program.hasAccess && (program.course?.progress ?? 0) >= 100);
+      (courseFilter === "completed" && (program.accessStatus === "completed" || (program.hasAccess && (program.course?.progress ?? 0) >= 100)));
     return matchesQuery && matchesFilter;
   });
   const selectedProgramSlug = searchParams.get("program");
-  const selectedProgram = selectedProgramSlug ? marketPrograms.find((program) => routeSlug(program.title) === selectedProgramSlug) ?? null : null;
-  const openProgramPurchase = (program: HomeProgramItem | (typeof marketPrograms)[number]) => {
+  const selectedProgram = selectedProgramSlug
+    ? homePrograms.find((program) => routeSlug(program.title) === selectedProgramSlug || program.course?.slug === selectedProgramSlug) ?? null
+    : null;
+  const openProgramPurchase = (program: HomeProgramItem) => {
     setPurchaseStep("details");
-    router.push(`/?program=${routeSlug(program.title)}`, { scroll: false });
+    router.push(`/?program=${routeSlug(program.course?.slug || program.title)}`, { scroll: false });
   };
   const closeProgramPurchase = () => {
     setPurchaseStep("details");
@@ -322,13 +324,14 @@ export function HomeView({ setActive, openCourse, openAiHub, t, notify }: { setA
 export type HomeProgramItem = {
   title: string;
   text: string;
-  icon: (typeof marketPrograms)[number]["icon"];
+  icon: (typeof courses)[number]["icon"];
   color: string;
   badge?: string;
   price?: string;
   pv?: string;
-  course?: (typeof courses)[number] & { slug?: string };
+  course?: ReturnType<typeof mapApiProgramToCourse>;
   hasAccess: boolean;
+  accessStatus?: string;
 };
 
 export function HomeProgramCard({ program, onOpen, onBuy, t }: { program: HomeProgramItem; onOpen: () => void; onBuy: () => void; t: TFn }) {

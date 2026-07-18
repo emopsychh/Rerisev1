@@ -22,5 +22,17 @@ export async function fetchInvited() {
 }
 
 export async function renewPartner() {
-  return apiRequest("/partner/renew", { method: "POST" });
+  return apiRequest<{
+    order_id: number;
+    product_name?: string;
+    amount_usd?: number;
+    status: string;
+    payment: {
+      provider: string;
+      payment_url: string | null;
+      instructions: string;
+      status: string;
+      expires_at?: string | null;
+    };
+  }>("/partner/renew", { method: "POST" });
 }

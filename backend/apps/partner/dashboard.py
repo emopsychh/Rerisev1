@@ -6,6 +6,7 @@ from apps.ledger.models import Entry
 from apps.partner.constants import LEG_LEFT, LEG_RIGHT
 from apps.partner.engine import count_active_direct_invites
 from apps.partner.engine_constants import (
+    BINARY_PV_PER_USD,
     FAST_START_REQUIRED,
     FAST_START_REWARD,
     RANK_BY_ID,
@@ -158,9 +159,9 @@ def build_dashboard(user) -> dict:
             },
             {
                 "label": "Бинарный доход",
-                "current": round(week.collapsed_pv / 10, 2),
+                "current": round(week.collapsed_pv / BINARY_PV_PER_USD, 2),
                 "unit": "USD",
-                "formula": "10 PV = $1",
+                "formula": f"{BINARY_PV_PER_USD} PV = $1",
             },
         ],
     }

@@ -99,4 +99,20 @@ def get_ai_provider() -> AIProvider:
     name = getattr(settings, "IBOX_AI_PROVIDER", PROVIDER_MOCK).lower()
     if name == PROVIDER_OPENAI:
         return OpenAIProvider()
-    return MockAIProvider()
+    if name == PROVIDER_MOCK:
+        if not settings.DEBUG:
+            raise RuntimeError(
+                "IBOX_AI_PROVIDER=mock запрещён при DEBUG=false. "
+                "Укажите IBOX_AI_PROVIDER=openai и OPENAI_API_KEY."
+            )
+        return MockAIProvider()
+    raise RuntimeError(f"Неизвестный IBOX_AI_PROVIDER: {name}")
+
+
+def ai_hub_is_available() -> bool:
+    name = getattr(settings, "IBOX_AI_PROVIDER", PROVIDER_MOCK).lower()
+    if name == PROVIDER_MOCK:
+        return bool(settings.DEBUG)
+    if name == PROVIDER_OPENAI:
+        return bool(getattr(settings, "OPENAI_API_KEY", ""))
+    return False

@@ -157,8 +157,18 @@ export function WalletView({ t, notify }: { t: TFn; notify: NotifyFn }) {
       const to = customTo ? new Date(`${customTo}T23:59:59`) : null;
       return (!from || date >= from) && (!to || date <= to);
     }
-    if (period === "today") return dateValue === "2026-07-12";
-    if (period === "yesterday") return dateValue === "2026-07-11";
+    const toLocalIso = (value: Date) => {
+      const y = value.getFullYear();
+      const m = String(value.getMonth() + 1).padStart(2, "0");
+      const d = String(value.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    };
+    if (period === "today") return dateValue === toLocalIso(startOfDay);
+    if (period === "yesterday") {
+      const yesterday = new Date(startOfDay);
+      yesterday.setDate(yesterday.getDate() - 1);
+      return dateValue === toLocalIso(yesterday);
+    }
     const from = new Date(startOfDay);
     if (period === "week") from.setDate(from.getDate() - 6);
     if (period === "month") from.setDate(1);

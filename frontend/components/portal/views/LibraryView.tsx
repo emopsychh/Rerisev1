@@ -8,7 +8,7 @@ import type { TFn } from "../../../lib/portal";
 import { PageShell } from "../shared/PageShell";
 import { PortalLoading } from "../shared/PortalLoading";
 
-export function LibraryView({ openMaterial, t }: { openMaterial: (materialTitle: string) => void; t: TFn }) {
+export function LibraryView({ openMaterial, t }: { openMaterial: (groupId: number, title: string) => void; t: TFn }) {
   const { materials, ready } = usePortalBackend();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Все");
@@ -62,7 +62,7 @@ export function LibraryView({ openMaterial, t }: { openMaterial: (materialTitle:
         {filteredMaterials.map((item) => {
           const Icon = item.icon;
           return (
-            <article className={`material-card ${item.color}`} key={item.title}>
+            <article className={`material-card ${item.color}`} key={item.id || item.title}>
               <div className="material-visual" aria-hidden="true">
                 <span className="material-glow" />
                 <span className="material-icon">
@@ -77,7 +77,7 @@ export function LibraryView({ openMaterial, t }: { openMaterial: (materialTitle:
               <div className="material-bottom">
                 <small>{t("обновлено")}: {t(item.updated)}</small>
                 <div className="material-actions">
-                  <button onClick={() => openMaterial(item.title)}>{t("Открыть")} <ChevronRight size={18} /></button>
+                  <button type="button" onClick={() => openMaterial(item.id, item.title)}>{t("Открыть")} <ChevronRight size={18} /></button>
                 </div>
               </div>
             </article>

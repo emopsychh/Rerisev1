@@ -245,8 +245,6 @@ export const OPEN_MARKETING_DECISIONS = [
   "Цена апгрейда и влияние апгрейда на период активности.",
 ] as const;
 
-export const CURRENT_DEMO_TIER = PARTNER_TIERS[1];
-
 export function getPartnerTier(tierId: PartnerTierId): PartnerTier {
   const tier = PARTNER_TIERS.find((item) => item.id === tierId);
   if (!tier) throw new Error(`Unknown partner tier: ${tierId}`);

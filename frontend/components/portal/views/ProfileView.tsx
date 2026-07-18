@@ -52,7 +52,7 @@ export function ProfileView({ t, notify, setActive, onRenew }: { t: TFn; notify:
     surname: user?.last_name || "",
     phone: user?.phone || "",
     email: user?.email || "",
-    country: "Россия",
+    country: "",
     city: "",
     language: user?.language === "en" ? "English" : user?.language === "es" ? "Español" : "Русский",
   });
@@ -95,7 +95,7 @@ export function ProfileView({ t, notify, setActive, onRenew }: { t: TFn; notify:
       surname: user.last_name || "",
       phone: user.phone || "",
       email: user.email || "",
-      country: "Россия",
+      country: "",
       city: "",
       language: user.language === "en" ? "English" : user.language === "es" ? "Español" : "Русский",
     };

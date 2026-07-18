@@ -9,7 +9,21 @@ export async function fetchMaterials(params?: { category?: string; search?: stri
 }
 
 export async function fetchMaterialGroup(id: number) {
-  return apiRequest(`/materials/groups/${id}`);
+  return apiRequest<{
+    id: number;
+    title: string;
+    files: Array<{
+      id: number;
+      title: string;
+      format: string;
+      file_url: string;
+      file_size: number;
+    }>;
+  }>(`/materials/groups/${id}`);
+}
+
+export function materialFileDownloadPath(fileId: number) {
+  return `/materials/files/${fileId}/download`;
 }
 
 export async function fetchChats() {

@@ -1,11 +1,15 @@
 from decimal import Decimal
 
 from django.db import IntegrityError, transaction
+from django.utils import timezone
 
 from apps.ledger.constants import (
     CURRENCY_USD,
+    DEBT_STATUS_OPEN,
+    DEBT_STATUS_PAID,
     DIRECTION_CREDIT,
     DIRECTION_DEBIT,
+    ENTRY_TYPE_ADJUSTMENT,
     SOURCE_TYPE_ADMIN,
     SOURCE_TYPE_ORDER,
     SOURCE_TYPE_PARTNER,
@@ -107,7 +111,7 @@ class LedgerWriter:
         source_type, source_id = LedgerWriter._resolve_source(source)
 
         try:
-            return Entry.objects.create(
+            entry = Entry.objects.create(
                 user=user,
                 entry_type=entry_type,
                 amount=normalized_amount,
@@ -133,6 +137,15 @@ class LedgerWriter:
                 direction=direction,
             )
             return existing
+
+        if (
+            currency == CURRENCY_USD
+            and direction == DIRECTION_CREDIT
+            and entry_type != ENTRY_TYPE_ADJUSTMENT
+        ):
+            AdjustmentService.recover_from_credit(user, normalized_amount)
+
+        return entry
 
     @staticmethod
     def _assert_idempotent_match(
@@ -169,11 +182,13 @@ class LedgerWriter:
             return SOURCE_TYPE_WITHDRAWAL, source.pk
         if model_name == "user":
             return SOURCE_TYPE_ADMIN, source.pk
+        if model_name == "adjustmentdebt":
+            return SOURCE_TYPE_ADMIN, source.pk
         return model_name, source.pk
 
 
 class AdjustmentService:
-    """Скелет сервиса корректировок — полная логика в спринте 6."""
+    """Корректировочные долги и удержание из следующих USD-начислений."""
 
     @staticmethod
     @transaction.atomic
@@ -196,6 +211,44 @@ class AdjustmentService:
         )
 
     @staticmethod
+    @transaction.atomic
     def recover_from_credit(user: User, credit_amount: Decimal) -> Decimal:
-        """Зарезервировано: удержание долга из следующих начислений."""
-        return credit_amount
+        """Списывает открытые долги из нового USD-кредита. Возвращает остаток кредита."""
+        remaining_credit = Decimal(str(credit_amount))
+        if remaining_credit <= 0:
+            return Decimal("0")
+
+        debts = (
+            AdjustmentDebt.objects.select_for_update()
+            .filter(user=user, status=DEBT_STATUS_OPEN, remaining_usd__gt=0)
+            .order_by("created_at", "id")
+        )
+        for debt in debts:
+            if remaining_credit <= 0:
+                break
+            take = min(debt.remaining_usd, remaining_credit)
+            if take <= 0:
+                continue
+
+            already_recovered = debt.amount_usd - debt.remaining_usd
+            LedgerWriter.debit(
+                user=user,
+                entry_type=ENTRY_TYPE_ADJUSTMENT,
+                amount=take,
+                currency=CURRENCY_USD,
+                source=debt,
+                description=f"Погашение долга #{debt.pk}",
+                metadata={"debt_id": debt.pk, "reason": debt.reason},
+                idempotency_key=f"debt:{debt.pk}:recovered:{already_recovered + take}",
+            )
+            debt.remaining_usd -= take
+            remaining_credit -= take
+            update_fields = ["remaining_usd"]
+            if debt.remaining_usd <= 0:
+                debt.remaining_usd = Decimal("0")
+                debt.status = DEBT_STATUS_PAID
+                debt.resolved_at = timezone.now()
+                update_fields.extend(["status", "resolved_at"])
+            debt.save(update_fields=update_fields)
+
+        return remaining_credit

@@ -10,6 +10,11 @@ from apps.content.access import (
 )
 from apps.content.constants import CATEGORY_ALL
 from apps.content.models import Banner, MaterialCategory, MaterialFile, MaterialGroup, TelegramChat
+from apps.ibox.gateway import ai_hub_is_available
+
+
+def _ai_hub_available() -> bool:
+    return ai_hub_is_available()
 
 
 def get_active_banners():
@@ -111,7 +116,7 @@ def build_home_payload(user) -> dict:
         "ai_box_widget": {
             "title": "RE:RISE AI — AI Hub",
             "description": "AI Hub получил новые сценарии для контента и продаж",
-            "is_available": True,
+            "is_available": _ai_hub_available(),
             "token_balance": token_balance,
         },
         "programs_count": programs_count,

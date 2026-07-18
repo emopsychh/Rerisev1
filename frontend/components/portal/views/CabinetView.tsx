@@ -4,7 +4,7 @@ import { startTransition, useEffect, useState } from "react";
 import { Check, Trophy, UserPlus } from "lucide-react";
 import { useAuth } from "../../../lib/auth/AuthProvider";
 import { usePortalBackend } from "../../../lib/auth/PortalBackendProvider";
-import { BINARY_RULES, PARTNER_RANKS, QUICK_START_RULES } from "../../../lib/marketing-plan";
+import { BINARY_RULES } from "../../../lib/marketing-plan";
 import { formatApiDate, formatUsd } from "../../../lib/portal";
 import type { NotifyFn, SectionId, TFn } from "../../../lib/portal";
 import { PageShell } from "../shared/PageShell";
@@ -31,16 +31,26 @@ export function CabinetView({ setActive, t, notify, onInvite, onOpenRanks }: { s
   const qualification = dashboard?.qualification_week as {
     title?: string;
     week_end?: string;
+    rows?: Array<{ label?: string; current?: number; required?: number; unit?: string }>;
   } | undefined;
   const weeklyCollapsedPv = Number(metrics?.weekly_collapsed_pv?.current ?? 0);
-  const nextRankRequired = Number(metrics?.weekly_collapsed_pv?.required ?? PARTNER_RANKS[1].weeklyCollapsedPv) || PARTNER_RANKS[1].weeklyCollapsedPv;
+  const nextRankRequired = Number(metrics?.weekly_collapsed_pv?.required ?? 0);
   const personalCurrent = Number(metrics?.active_personal_partners?.current ?? 0);
-  const personalRequired = Number(metrics?.active_personal_partners?.required ?? 2) || 2;
-  const personalProgress = Math.min(100, Math.round((personalCurrent / Math.max(1, personalRequired)) * 100));
+  const personalRequired = Number(metrics?.active_personal_partners?.required ?? 0);
+  const personalProgress = personalRequired > 0
+    ? Math.min(100, Math.round((personalCurrent / personalRequired) * 100))
+    : 0;
   const fastStart = metrics?.fast_start;
-  const nextRank = PARTNER_RANKS[1];
-  const rankProgress = Math.min(100, Math.round((weeklyCollapsedPv / Math.max(1, nextRankRequired)) * 100));
-  const binaryIncome = weeklyCollapsedPv / BINARY_RULES.collapsedPvPerUsd;
+  const rankProgress = nextRankRequired > 0
+    ? Math.min(100, Math.round((weeklyCollapsedPv / nextRankRequired) * 100))
+    : 0;
+  const binaryIncomeRow = Array.isArray(qualification?.rows)
+    ? qualification.rows.find((row) => row?.unit === "USD" || String(row?.label || "").toLowerCase().includes("бинар"))
+    : undefined;
+  const binaryIncome = Number(
+    binaryIncomeRow?.current
+    ?? (nextRankRequired > 0 || weeklyCollapsedPv > 0 ? weeklyCollapsedPv / BINARY_RULES.collapsedPvPerUsd : 0),
+  );
   const availableUsd = Number(
     metrics?.available_to_withdraw?.amount_usd
       ?? (dashboard?.balance as { available_usd?: number } | undefined)?.available_usd
@@ -49,7 +59,7 @@ export function CabinetView({ setActive, t, notify, onInvite, onOpenRanks }: { s
   );
   const displayName = [user?.first_name, user?.last_name].filter(Boolean).join(" ") || "Партнёр";
   const currentRankName = partner?.current_rank_name || "—";
-  const nextRankName = metrics?.weekly_collapsed_pv?.next_rank || partner?.next_rank_name || nextRank.name;
+  const nextRankName = metrics?.weekly_collapsed_pv?.next_rank || partner?.next_rank_name || "—";
   const activityUntil = formatApiDate(partner?.activity_until, "—");
   const [qualificationTimeLeft, setQualificationTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
@@ -154,18 +164,24 @@ export function CabinetView({ setActive, t, notify, onInvite, onOpenRanks }: { s
             <div className="cabinet-rank-metrics">
               <div className="cabinet-rank-metric">
                 <span>{t("Недельный объём")}</span>
-                <strong>{weeklyCollapsedPv} / {nextRankRequired} <small>PV</small></strong>
+                <strong>{weeklyCollapsedPv} / {nextRankRequired || "—"} <small>PV</small></strong>
                 <i><b style={{ width: `${rankProgress}%` }} /></i>
-                <small>{t("Осталось")} {Math.max(0, nextRankRequired - weeklyCollapsedPv)} PV</small>
+                <small>
+                  {nextRankRequired > 0
+                    ? `${t("Осталось")} ${Math.max(0, nextRankRequired - weeklyCollapsedPv)} PV`
+                    : t("Нет следующей ступени")}
+                </small>
               </div>
               <div className="cabinet-rank-metric is-personal">
                 <span>{t("Активные личные")}</span>
-                <strong>{personalCurrent} / {personalRequired}</strong>
+                <strong>{personalCurrent}{personalRequired > 0 ? ` / ${personalRequired}` : ""}</strong>
                 <i><b style={{ width: `${personalProgress}%` }} /></i>
                 <small>
-                  {personalCurrent >= personalRequired
-                    ? t("Условие выполнено")
-                    : `${t("Осталось")} ${Math.max(0, personalRequired - personalCurrent)}`}
+                  {personalRequired <= 0
+                    ? t("Условие не требуется")
+                    : personalCurrent >= personalRequired
+                      ? t("Условие выполнено")
+                      : `${t("Осталось")} ${Math.max(0, personalRequired - personalCurrent)}`}
                 </small>
               </div>
             </div>
@@ -175,8 +191,8 @@ export function CabinetView({ setActive, t, notify, onInvite, onOpenRanks }: { s
                 <span>{t("Быстрый старт")}</span>
                 <strong>
                   {fastStart?.reward_paid
-                    ? <>{t("выполнен")} <em>+${Number(fastStart.reward_usd ?? QUICK_START_RULES.rewardUsd)}</em></>
-                    : `${Number(fastStart?.current ?? 0)} / ${Number(fastStart?.required ?? QUICK_START_RULES.requiredPersonalPartners)}`}
+                    ? <>{t("выполнен")} <em>+${Number(fastStart.reward_usd ?? 0)}</em></>
+                    : `${Number(fastStart?.current ?? 0)} / ${Number(fastStart?.required ?? 0)}`}
                 </strong>
               </div>
               {fastStart?.reward_paid ? <span className="cabinet-rank-check"><Check size={17} /></span> : null}

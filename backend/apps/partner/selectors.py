@@ -3,8 +3,8 @@ from apps.partner.constants import (
     DEFAULT_PARTNER_NAME,
     HISTORICAL_RANK_NOTE,
     INACTIVITY_INFO,
-    RANK_LABELS,
 )
+from apps.partner.engine_constants import rank_name
 from apps.partner.models import PartnerProfile, SponsorLink
 
 
@@ -53,7 +53,7 @@ def format_partner_name(profile) -> str:
 
 
 def get_rank_label(rank_id: str) -> str:
-    return RANK_LABELS.get(rank_id, rank_id)
+    return rank_name(rank_id)
 
 
 def serialize_invited_partner(link: SponsorLink) -> dict:

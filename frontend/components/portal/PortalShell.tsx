@@ -19,7 +19,7 @@ import { markAllNotificationsRead, markNotificationRead } from "../../lib/api/me
 import {
   formatApiDate,
   formatLeadTime,
-  materialCards,
+  materialsFromApi,
   mobileLabels,
   mobileMoreIds,
   mobileNavIds,
@@ -63,7 +63,7 @@ export function PortalShellInner(props: {
   goHomeFromBrand: () => void;
   goBack: () => void;
   openCourse: (courseSlug: string, returnTo: SectionId, courseTitle?: string) => void;
-  openMaterial: (materialTitle: string) => void;
+  openMaterial: (groupId: number, materialTitle: string) => void;
   openInvite: () => void;
   openRenewal: () => void;
   openRanks: () => void;
@@ -94,6 +94,7 @@ export function PortalShellInner(props: {
   } = props;
   const { refreshMe } = useAuth();
   const backend = usePortalBackend();
+  const materialCatalog = materialsFromApi(backend.materials)?.items ?? [];
   const partnerSummary = backend.home?.partner_summary;
   const hasTariff = Boolean(partnerSummary?.tariff_id);
   const sidebarTariffName = hasTariff
@@ -289,7 +290,24 @@ export function PortalShellInner(props: {
         </header>
 
         {detail?.type === "course" ? <CourseDetailView slug={detail.slug} t={t} notify={notify} /> : null}
-        {detail?.type === "material" ? <MaterialDetailView material={materialCards.find((item) => item.title === detail.title) ?? materialCards[0]} t={t} notify={notify} openAiHub={openAiHub} /> : null}
+        {detail?.type === "material" ? (
+          <MaterialDetailView
+            material={
+              materialCatalog.find((item) => item.id === detail.groupId) ?? {
+                id: detail.groupId,
+                title: detail.title,
+                text: "",
+                count: 0,
+                updated: "—",
+                category: t("Материалы"),
+                color: "blue",
+              }
+            }
+            t={t}
+            notify={notify}
+            openAiHub={openAiHub}
+          />
+        ) : null}
         {!detail && active === "home" ? <HomeView setActive={goSection} openCourse={openCourse} openAiHub={openAiHub} t={t} notify={notify} /> : null}
         {!detail && active === "cabinet" ? <CabinetView setActive={goSection} t={t} notify={notify} onInvite={openInvite} onOpenRanks={openRanks} /> : null}
         {!detail && active === "workspace" ? <WorkspaceView t={t} notify={notify} /> : null}

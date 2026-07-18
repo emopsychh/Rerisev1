@@ -1,5 +1,4 @@
 import type { MarketOffer, MarketTab, SectionId, TFn } from "./types";
-import { accessPackages, marketPrograms, tokenPacks } from "./mock-data";
 
 export const routeBySection: Partial<Record<SectionId, string>> = {
   home: "/",
@@ -79,48 +78,9 @@ export function marketTabFromPathname(pathname: string): MarketTab | null {
   return null;
 }
 
-export function marketOfferFromPathname(pathname: string): MarketOffer | null {
-  const match = pathname.match(/^\/market\/(programs|packages|tokens)\/([^/]+)$/);
-  if (!match) return null;
-  const [, group, slug] = match;
-
-  if (group === "programs") {
-    const item = marketPrograms.find((program) => routeSlug(program.title) === slug);
-    return item ? {
-      kind: "program",
-      title: item.title,
-      price: item.price,
-      pv: item.pv,
-      text: item.text,
-      features: ["Состав, цена, PV и условия доступа находятся в проработке"],
-    } : null;
-  }
-
-  if (group === "packages") {
-    const item = accessPackages.find((marketPackage) => routeSlug(marketPackage.title) === slug);
-    return item ? {
-      kind: "package",
-      title: item.title,
-      price: item.price,
-      pv: item.pv,
-      text: item.text,
-      features: item.features,
-    } : null;
-  }
-
-  const item = tokenPacks.find((tokenPack) => routeSlug(tokenPack.title) === slug);
-  return item ? {
-    kind: "tokens",
-    title: item.title,
-    price: item.price,
-    pv: item.pv,
-    text: item.text,
-    features: [
-      "Токены зачисляются на баланс AI Hub",
-      "Не участвуют в PV и партнёрских начислениях",
-    ],
-    productId: slug.includes("5000") ? "tokens-5000" : "tokens-1000",
-  } : null;
+export function marketOfferFromPathname(_pathname: string): MarketOffer | null {
+  // Offers must resolve from live store catalogs in MarketplaceView — mock catalogs removed.
+  return null;
 }
 
 export function marketOfferHref(offer: MarketOffer) {

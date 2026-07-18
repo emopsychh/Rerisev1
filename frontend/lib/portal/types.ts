@@ -5,7 +5,7 @@ export type MarketTab = "packages" | "tokens";
 export type TelegramResourceId = "partnerChat" | "leadersChat" | "onboardingChat" | "contentChat" | "supportChat" | "marketingChannel";
 export type DetailView =
   | { type: "course"; slug: string; title?: string; returnTo: SectionId }
-  | { type: "material"; title: string; returnTo: SectionId };
+  | { type: "material"; groupId: number; title: string; returnTo: SectionId };
 export type CrmDeal = {
   id: string;
   name: string;

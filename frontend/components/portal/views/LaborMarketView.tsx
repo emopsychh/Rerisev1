@@ -15,80 +15,19 @@ export function LaborMarketView({ t }: { t: TFn; notify?: NotifyFn }) {
     { id: "content", label: "Контент" },
     { id: "automation", label: "Автоматизация" },
   ];
-  const projects = [
-    {
-      id: "ai-landing",
-      category: "design" as const,
-      categoryLabel: "Дизайн",
-      title: "Лендинг для AI-сервиса",
-      text: "Собрать визуальную концепцию и дизайн первого экрана для запуска нового продукта.",
-      budget: "$450–650",
-      deadline: "4 дня",
-      format: "Удалённо",
-      client: "NOVA Studio",
-      skills: ["Figma", "AI-визуал", "UX"],
-    },
-    {
-      id: "reels-launch",
-      category: "content" as const,
-      categoryLabel: "Контент",
-      title: "Серия Reels для запуска программы",
-      text: "Подготовить шесть сценариев, hooks и покадровую структуру роликов для эксперта.",
-      budget: "$280–360",
-      deadline: "7 дней",
-      format: "Удалённо",
-      client: "Мария С.",
-      skills: ["Reels", "Сценарии", "AI"],
-    },
-    {
-      id: "crm-automation",
-      category: "automation" as const,
-      categoryLabel: "Автоматизация",
-      title: "Автоматизация заявок и CRM",
-      text: "Настроить путь лида от формы до задачи менеджеру и базовую цепочку сообщений.",
-      budget: "$700–900",
-      deadline: "10 дней",
-      format: "Проект",
-      client: "Growth Lab",
-      skills: ["CRM", "Make", "Воронки"],
-    },
-    {
-      id: "webinar-deck",
-      category: "design" as const,
-      categoryLabel: "Дизайн",
-      title: "Презентация для вебинара",
-      text: "Упаковать продуктовую историю в 24 слайда и подготовить визуалы для выступления.",
-      budget: "$220–300",
-      deadline: "3 дня",
-      format: "Удалённо",
-      client: "RE:RISE Partner",
-      skills: ["Slides", "Storytelling", "AI"],
-    },
-    {
-      id: "brand-content",
-      category: "content" as const,
-      categoryLabel: "Контент",
-      title: "Контент-система личного бренда",
-      text: "Собрать рубрикатор, контент-план на месяц и библиотеку промптов для команды.",
-      budget: "$320–420",
-      deadline: "8 дней",
-      format: "Удалённо",
-      client: "Артём К.",
-      skills: ["Контент", "Промпты", "Стратегия"],
-    },
-    {
-      id: "sales-flow",
-      category: "automation" as const,
-      categoryLabel: "Автоматизация",
-      title: "AI-сценарий обработки лидов",
-      text: "Спроектировать квалификацию заявок и персональные follow-up сообщения для продаж.",
-      budget: "$540–720",
-      deadline: "6 дней",
-      format: "Проект",
-      client: "Meta Sales",
-      skills: ["AI Hub", "Продажи", "CRM"],
-    },
-  ];
+  // Empty until labor API ships — no demo projects/metrics.
+  const projects: Array<{
+    id: string;
+    category: "design" | "content" | "automation";
+    categoryLabel: string;
+    title: string;
+    text: string;
+    budget: string;
+    deadline: string;
+    format: string;
+    client: string;
+    skills: string[];
+  }> = [];
   const filteredProjects = projects.filter((project) => {
     const haystack = `${project.title} ${project.text} ${project.skills.join(" ")}`.toLowerCase();
     return (filter === "all" || project.category === filter) && haystack.includes(query.toLowerCase());
@@ -99,13 +38,13 @@ export function LaborMarketView({ t }: { t: TFn; notify?: NotifyFn }) {
       <SectionInDevOverlay
         t={t}
         title="Биржа труда"
-        description="Биржа труда пока не подключена к рабочей системе. Ниже сохранён будущий интерфейс — без реальных заказов и откликов."
+        description="Биржа труда пока не подключена. Каркас интерфейса без демонстрационных проектов и метрик."
       >
         <header className="premium-page-intro labor-intro">
           <div>
             <span>{t("Биржа RE:RISE")}</span>
             <h2>{t("Проекты внутри экосистемы")}</h2>
-            <p>{t("Находите задачи по своей специализации, откликайтесь и развивайте портфолио внутри сообщества.")}</p>
+            <p>{t("Раздел появится после запуска биржи. Сейчас проектов нет.")}</p>
           </div>
           <button className="premium-page-intro-action" type="button" tabIndex={-1}>
             <Plus size={17} />{t("Разместить портфолио")}
@@ -114,10 +53,10 @@ export function LaborMarketView({ t }: { t: TFn; notify?: NotifyFn }) {
 
         <section className="labor-metrics" aria-label={t("Состояние биржи")}>
           {[
-            ["34", "активных проекта"],
-            ["128", "специалистов"],
-            ["$12 480", "заказов за месяц"],
-            ["4,9", "средняя оценка"],
+            ["0", "активных проекта"],
+            ["0", "специалистов"],
+            ["$0", "заказов за месяц"],
+            ["—", "средняя оценка"],
           ].map(([value, label]) => <div key={label}><strong>{value}</strong><span>{t(label)}</span></div>)}
         </section>
 
@@ -154,9 +93,7 @@ export function LaborMarketView({ t }: { t: TFn; notify?: NotifyFn }) {
               </footer>
             </article>
           ))}
-          {filteredProjects.length === 0 ? (
-            <div className="labor-empty"><Search size={25} /><strong>{t("Проекты не найдены")}</strong><span>{t("Измените запрос или выберите другую категорию.")}</span></div>
-          ) : null}
+          <div className="labor-empty"><Search size={25} /><strong>{t("Проекты пока не доступны")}</strong><span>{t("Биржа труда ещё не запущена.")}</span></div>
         </section>
       </SectionInDevOverlay>
     </PageShell>

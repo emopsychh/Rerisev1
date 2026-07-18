@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.management import call_command
 from django.test import TestCase
 from rest_framework import status
@@ -24,7 +25,9 @@ class ContentAPITestCase(AuthStoreTestMixin, TestCase):
         data = response.data["data"]
         self.assertGreaterEqual(len(data["banners"]), 1)
         self.assertIn("image_url", data["banners"][0])
-        self.assertEqual(data["ai_box_widget"]["is_available"], True)
+        # mock AI is only marked available in DEBUG; tests run with DEBUG=False
+        expected_ai = bool(settings.DEBUG) or getattr(settings, "IBOX_AI_PROVIDER", "mock") != "mock"
+        self.assertEqual(data["ai_box_widget"]["is_available"], expected_ai)
         self.assertGreaterEqual(data["programs_count"], 3)
 
     def test_materials_catalog_filters_by_tariff(self):

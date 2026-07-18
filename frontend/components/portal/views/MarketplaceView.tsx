@@ -6,7 +6,7 @@ import { Check, CheckCircle2, ChevronRight, ShieldCheck, Sparkles, Zap } from "l
 import { usePortalBackend } from "../../../lib/auth/PortalBackendProvider";
 import { createOrder } from "../../../lib/api/store";
 import { ApiError } from "../../../lib/api/types";
-import { marketOfferFromPathname, marketOfferHref, routeSlug } from "../../../lib/portal";
+import { marketOfferHref, routeSlug } from "../../../lib/portal";
 import type { MarketOffer, MarketTab, NotifyFn, TFn } from "../../../lib/portal";
 import { PageShell } from "../shared/PageShell";
 import { PortalDialog } from "../shared/PortalDialog";
@@ -16,7 +16,7 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
   const router = useRouter();
   const pathname = usePathname();
   const { tariffs, tokens, reload, home, ready, wallet } = usePortalBackend();
-  const [selectedOffer, setSelectedOffer] = useState<MarketOffer | null>(() => marketOfferFromPathname(pathname));
+  const [selectedOffer, setSelectedOffer] = useState<MarketOffer | null>(null);
   const [purchaseStep, setPurchaseStep] = useState<"details" | "ready">("details");
   const [ordering, setOrdering] = useState(false);
   const [lastPaidFromWallet, setLastPaidFromWallet] = useState(false);
@@ -145,9 +145,28 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
       }
       return;
     }
-    setSelectedOffer(marketOfferFromPathname(pathname));
+    if (group === "packages") {
+      const pack = apiPackages.find(
+        (item) => routeSlug(item.title) === slug || routeSlug(item.productId) === slug,
+      );
+      if (pack) {
+        setSelectedOffer({
+          kind: "package",
+          title: pack.title,
+          price: pack.price,
+          priceUsd: pack.priceUsd,
+          pv: pack.pv,
+          text: pack.text,
+          features: pack.features,
+          productId: pack.productId,
+        });
+        setPurchaseStep("details");
+      }
+      return;
+    }
+    setSelectedOffer(null);
     setPurchaseStep("details");
-  }, [pathname, tokens]);
+  }, [pathname, tariffs, tokens]);
 
   if (!ready) {
     return (

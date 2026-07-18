@@ -1,12 +1,5 @@
 DEFAULT_RANK = "partner_1"
 
-RANK_LABELS = {
-    "partner_1": "Партнёр I",
-    "partner_2": "Партнёр II",
-    "partner_3": "Партнёр III",
-    "visionary": "Визионер",
-}
-
 HISTORICAL_RANK_NOTE = "Сохраняется независимо от активности"
 
 INACTIVITY_INFO = (

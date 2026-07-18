@@ -84,13 +84,7 @@ def get_order_for_user(order_id: int, user_id: int) -> Order:
 
 
 def get_tariff_rank(tariff_id: str) -> int:
-    rank = (
-        TariffPlan.objects.filter(tariff_id=tariff_id)
-        .values_list("purchase_pv_cap", flat=True)
-        .first()
-    )
-    if rank is not None:
-        return rank
+    """Ladder order for upgrades/access (1 < 2 < 3). Not purchase PV caps."""
     return TARIFF_RANK_FALLBACK.get(tariff_id, 0)
 
 

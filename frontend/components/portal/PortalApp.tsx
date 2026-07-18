@@ -5,11 +5,10 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "../../lib/auth/AuthProvider";
 import { usePortalBackend } from "../../lib/auth/PortalBackendProvider";
 import {
-  materialCards,
   marketTabFromPathname,
   matchesRoute,
+  materialsFromApi,
   pageTitle,
-  routeSlug,
   sectionFromPathname,
   sectionHref,
   sectionIds,
@@ -25,7 +24,7 @@ export function PortalAppContent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { user, loading: authLoading, logout } = useAuth();
-  const { ready: backendReady } = usePortalBackend();
+  const { ready: backendReady, materials } = usePortalBackend();
   const [active, setActive] = useState<SectionId>(() => {
     if (pathname === "/") {
       const requestedSection = searchParams.get("section");
@@ -52,9 +51,9 @@ export function PortalAppContent() {
     setDetail({ type: "course", slug: courseSlug, title: courseTitle, returnTo });
     router.push(`/courses/${courseSlug}?from=${returnTo}`, { scroll: false });
   };
-  const openMaterial = (materialTitle: string) => {
-    setDetail({ type: "material", title: materialTitle, returnTo: "library" });
-    router.push(`/materials/${routeSlug(materialTitle)}`, { scroll: false });
+  const openMaterial = (groupId: number, materialTitle: string) => {
+    setDetail({ type: "material", groupId, title: materialTitle, returnTo: "library" });
+    router.push(`/materials/${groupId}`, { scroll: false });
   };
   const openInvite = () => {
     const params = new URLSearchParams(searchParams.toString());
@@ -131,11 +130,24 @@ export function PortalAppContent() {
     }
 
     const materialMatch = pathname.match(/^\/materials\/([^/]+)/);
-    const material = materialMatch ? materialCards.find((item) => routeSlug(item.title) === materialMatch[1]) : null;
-    if (material) {
-      setActive("library");
-      setDetail({ type: "material", title: material.title, returnTo: "library" });
-      return;
+    if (materialMatch?.[1]) {
+      const raw = materialMatch[1];
+      const materialCatalog = materialsFromApi(materials)?.items ?? [];
+      const groupId = Number(raw.split("-")[0]);
+      const byId = Number.isFinite(groupId)
+        ? materialCatalog.find((item) => item.id === groupId)
+        : null;
+      const bySlug = byId ?? materialCatalog.find((item) => item.slug === raw);
+      if (bySlug) {
+        setActive("library");
+        setDetail({ type: "material", groupId: bySlug.id, title: bySlug.title, returnTo: "library" });
+        return;
+      }
+      if (Number.isFinite(groupId) && groupId > 0) {
+        setActive("library");
+        setDetail({ type: "material", groupId, title: t("Материалы"), returnTo: "library" });
+        return;
+      }
     }
 
     if (pathname === "/") {
@@ -152,7 +164,7 @@ export function PortalAppContent() {
       const routedMarketTab = marketTabFromPathname(pathname);
       if (routedMarketTab) setMarketTab(routedMarketTab);
     }
-  }, [pathname, searchParams]);
+  }, [pathname, searchParams, materials]);
 
   useEffect(() => {
     setIsInviteOpen(searchParams.get("dialog") === "invite");
