@@ -50,20 +50,32 @@ From **repo root** on the VPS:
 
 ```bash
 cp .env.example .env
-# edit secrets / hosts in .env
+# edit secrets / DOMAIN=systema.site / HTTPS origins
 
 docker compose up -d --build
 docker compose exec api python manage.py createsuperuser
 ```
 
-Usual commands (same directory):
+### HTTPS (Let's Encrypt)
+
+1. DNS: `A systema.site → IP сервера`
+2. В `.env`: `DOMAIN`, `SSL_EMAIL`, `DJANGO_*` с `https://systema.site`
+3. Выпуск сертификата:
+
+```bash
+chmod +x docker/issue-ssl.sh
+./docker/issue-ssl.sh
+```
+
+После этого сайт: `https://systema.site/` (HTTP редиректит на HTTPS). Продление — сервис `certbot` в compose.
+
+Usual commands:
 
 ```bash
 docker compose up -d
 docker compose down
 docker compose ps
 docker compose logs -f
-docker compose exec api python manage.py createsuperuser
 ```
 
 Stack: `nginx` → `web` (Next) + `api` (gunicorn) + `celery` + `celery-beat` + `postgres` + `redis`.
