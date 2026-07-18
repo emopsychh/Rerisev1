@@ -86,8 +86,7 @@ class OrderService:
     def _pay_with_wallet(user: User, order: Order) -> Order:
         from decimal import Decimal
 
-        from apps.ledger.constants import ENTRY_TYPE_STORE_PURCHASE
-        from apps.ledger.services import LedgerWriter
+        from apps.ledger.services import LedgerError
         from apps.wallet.services import WalletUpdater
 
         balance = WalletUpdater.refresh(user)
@@ -108,6 +107,30 @@ class OrderService:
             paid_at=timezone.now(),
         )
 
+        try:
+            OrderService._debit_store_purchase(user, order, payment_id=payment.pk)
+        except LedgerError as exc:
+            raise OrderValidationError(str(exc)) from exc
+
+        OrderFulfillmentService.fulfill(order)
+        return get_order_for_user(order.id, user.id)
+
+    @staticmethod
+    def _debit_store_purchase(user: User, order: Order, *, payment_id: int | None = None) -> None:
+        """Идемпотентное списание стоимости заказа с кошелька."""
+        from decimal import Decimal
+
+        from apps.ledger.constants import ENTRY_TYPE_STORE_PURCHASE
+        from apps.ledger.models import Entry
+        from apps.ledger.services import LedgerWriter
+        from apps.wallet.services import WalletUpdater
+
+        key = f"store-purchase:{order.pk}"
+        if Entry.objects.filter(idempotency_key=key).exists():
+            WalletUpdater.refresh(user)
+            return
+
+        amount = Decimal(str(order.amount_usd))
         LedgerWriter.debit(
             user,
             ENTRY_TYPE_STORE_PURCHASE,
@@ -116,15 +139,12 @@ class OrderService:
             metadata={
                 "product_slug": order.product.slug,
                 "product_name": order.product.name,
-                "payment_id": payment.pk,
+                "payment_id": payment_id,
             },
-            idempotency_key=f"store-purchase:{order.pk}",
+            idempotency_key=key,
             description=f"Покупка: {order.product.name}",
         )
         WalletUpdater.refresh(user)
-
-        OrderFulfillmentService.fulfill(order)
-        return get_order_for_user(order.id, user.id)
 
     @staticmethod
     def _validate(
@@ -337,7 +357,7 @@ class PaymentConfirmationService:
     @staticmethod
     @transaction.atomic
     def confirm(payment: Payment, *, paid_at=None) -> Order:
-        payment = Payment.objects.select_for_update().select_related("order").get(
+        payment = Payment.objects.select_for_update().select_related("order", "order__product", "order__user").get(
             pk=payment.pk
         )
         if payment.status == Payment.STATUS_PAID:
@@ -349,7 +369,39 @@ class PaymentConfirmationService:
             payment.save(update_fields=["status", "paid_at", "updated_at"])
             return payment.order
 
+        # Manual-подтверждение: если на кошельке хватает средств и списания ещё не было —
+        # списываем (демо / PAYMENT_PROVIDER=manual). CryptoBot webhook не трогаем.
+        if payment.provider == "manual":
+            PaymentConfirmationService._try_debit_wallet_on_manual_confirm(
+                payment.order, payment_id=payment.pk
+            )
+
         payment.status = Payment.STATUS_PAID
         payment.paid_at = paid_at or timezone.now()
         payment.save(update_fields=["status", "paid_at", "updated_at"])
         return OrderFulfillmentService.fulfill(payment.order)
+
+    @staticmethod
+    def _try_debit_wallet_on_manual_confirm(order: Order, *, payment_id: int) -> None:
+        from decimal import Decimal
+
+        from apps.ledger.models import Entry
+        from apps.ledger.services import LedgerError
+        from apps.wallet.services import WalletUpdater
+
+        key = f"store-purchase:{order.pk}"
+        if Entry.objects.filter(idempotency_key=key).exists():
+            return
+        if order.payments.filter(provider="wallet", status=Payment.STATUS_PAID).exists():
+            return
+
+        amount = Decimal(str(order.amount_usd))
+        balance = WalletUpdater.refresh(order.user)
+        if balance.available_usd < amount:
+            return
+
+        try:
+            OrderService._debit_store_purchase(order.user, order, payment_id=payment_id)
+        except LedgerError:
+            # Не блокируем выдачу тарифа при ручном confirm, если ledger недоступен.
+            return

@@ -83,9 +83,7 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
     setOrdering(true);
     try {
       const order = await createOrder(productId, orderType);
-      const paidFromWallet = order.status === "paid" && (
-        order.payment?.provider === "wallet" || !order.payment?.payment_url
-      );
+      const paidFromWallet = order.status === "paid" && order.payment?.provider === "wallet";
       setLastPaidFromWallet(paidFromWallet);
       if (paidFromWallet) {
         notify(

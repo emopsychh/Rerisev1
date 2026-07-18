@@ -14,6 +14,7 @@ from apps.commerce.selectors import (
 )
 from apps.commerce.serializers import CreateOrderSerializer
 from apps.commerce.services import OrderService, OrderValidationError
+from apps.ledger.services import LedgerError
 from core.responses import error_response, success_response
 
 
@@ -50,7 +51,7 @@ class OrderCreateView(APIView):
                 product_slug=serializer.validated_data["product_id"],
                 order_type=serializer.validated_data["order_type"],
             )
-        except OrderValidationError as exc:
+        except (OrderValidationError, LedgerError) as exc:
             return error_response(
                 "BUSINESS_RULE_ERROR",
                 str(exc),
