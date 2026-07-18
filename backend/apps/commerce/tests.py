@@ -289,3 +289,126 @@ class CommerceAPITestCase(TestCase):
 
         balance = WalletUpdater.refresh(self.user)
         self.assertEqual(balance.available_usd, Decimal("10.00"))
+
+    def test_wallet_pay_creates_store_purchase_entry(self):
+        from decimal import Decimal
+
+        from apps.ledger.constants import ENTRY_TYPE_STORE_PURCHASE, DIRECTION_DEBIT
+        from apps.ledger.models import Entry
+        from apps.ledger.constants import ENTRY_TYPE_ADJUSTMENT
+        from apps.ledger.services import LedgerWriter
+        from apps.wallet.services import WalletUpdater
+
+        LedgerWriter.credit(
+            self.user,
+            ENTRY_TYPE_ADJUSTMENT,
+            Decimal("100.00"),
+            description="topup",
+            idempotency_key="topup-store-entry",
+        )
+        WalletUpdater.refresh(self.user)
+
+        self.client.credentials(**self.auth)
+        response = self.client.post(
+            "/api/v1/store/orders",
+            {"product_id": "rise", "order_type": "purchase"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        order_id = response.data["data"]["order_id"]
+        debit = Entry.objects.get(
+            user=self.user,
+            entry_type=ENTRY_TYPE_STORE_PURCHASE,
+            direction=DIRECTION_DEBIT,
+            idempotency_key=f"store-purchase:{order_id}",
+        )
+        self.assertEqual(debit.amount, Decimal("90.00"))
+
+    def test_manual_confirm_does_not_debit_wallet(self):
+        """Confirm Payment = внешняя оплата; кошелёк не трогаем."""
+        from decimal import Decimal
+
+        from apps.ledger.constants import ENTRY_TYPE_ADJUSTMENT, ENTRY_TYPE_STORE_PURCHASE
+        from apps.ledger.models import Entry
+        from apps.ledger.services import LedgerWriter
+        from apps.wallet.services import WalletUpdater
+
+        # Баланса не хватает на Rise → уйдёт в manual pending
+        LedgerWriter.credit(
+            self.user,
+            ENTRY_TYPE_ADJUSTMENT,
+            Decimal("10.00"),
+            description="small",
+            idempotency_key="topup-small-manual",
+        )
+        WalletUpdater.refresh(self.user)
+
+        self.client.credentials(**self.auth)
+        response = self.client.post(
+            "/api/v1/store/orders",
+            {"product_id": "rise", "order_type": "purchase"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["data"]["status"], "pending")
+        order_id = response.data["data"]["order_id"]
+
+        # Пополнили кошелёк ПОСЛЕ создания заказа — confirm всё равно не должен списать
+        LedgerWriter.credit(
+            self.user,
+            ENTRY_TYPE_ADJUSTMENT,
+            Decimal("200.00"),
+            description="later",
+            idempotency_key="topup-later-manual",
+        )
+        WalletUpdater.refresh(self.user)
+
+        from apps.commerce.models import Payment
+        from apps.commerce.services import PaymentConfirmationService
+
+        payment = Payment.objects.get(order_id=order_id)
+        PaymentConfirmationService.confirm(payment)
+
+        self.assertFalse(
+            Entry.objects.filter(
+                user=self.user,
+                entry_type=ENTRY_TYPE_STORE_PURCHASE,
+            ).exists()
+        )
+        self.assertEqual(WalletUpdater.refresh(self.user).available_usd, Decimal("210.00"))
+
+    def test_second_wallet_purchase_fails_when_insufficient(self):
+        from decimal import Decimal
+
+        from apps.ledger.constants import ENTRY_TYPE_ADJUSTMENT
+        from apps.ledger.services import LedgerWriter
+        from apps.wallet.services import WalletUpdater
+
+        LedgerWriter.credit(
+            self.user,
+            ENTRY_TYPE_ADJUSTMENT,
+            Decimal("100.00"),
+            description="only-100",
+            idempotency_key="topup-100-once",
+        )
+        WalletUpdater.refresh(self.user)
+
+        self.client.credentials(**self.auth)
+        first = self.client.post(
+            "/api/v1/store/orders",
+            {"product_id": "rise", "order_type": "purchase"},
+            format="json",
+        )
+        self.assertEqual(first.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(first.data["data"]["status"], "paid")
+
+        # Уже есть тариф — апгрейд на pro ($300) при остатке $10 → pending или 422
+        second = self.client.post(
+            "/api/v1/store/orders",
+            {"product_id": "rise-pro", "order_type": "upgrade"},
+            format="json",
+        )
+        # Недостаточно для wallet → external pending (не paid)
+        self.assertEqual(second.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(second.data["data"]["status"], "pending")
+        self.assertNotEqual(second.data["data"]["payment"]["provider"], "wallet")

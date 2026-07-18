@@ -131,6 +131,16 @@ class UpgradeRenewalTests(BonusEngineTestMixin, TestCase):
         # +$60 разницы → всего 90
         self.assertEqual(self.sum_entries(sponsor.user, ENTRY_TYPE_PERSONAL_BONUS), Decimal("90"))
 
+    def test_tc_upg_03_pro_sponsor_rise_to_max_gets_matrix_delta(self):
+        """Спонсор Pro, байер Rise→Max: delta = min(90,300)-min(90,30) = 60, не «всё или ничего»."""
+        sponsor = self.join("a@t.ai", "rise-pro")
+        self.join("b@t.ai", "rise", sponsor_code=self.referral_code(sponsor))
+
+        self.buy_tariff("rise-pro-max", order_type="upgrade")
+
+        # 30 (покупка Rise) + 60 (апгрейд) = 90
+        self.assertEqual(self.sum_entries(sponsor.user, ENTRY_TYPE_PERSONAL_BONUS), Decimal("90"))
+
     def test_upgrade_bonus_paid_to_inactive_sponsor_within_12m(self):
         sponsor = self.join("a@t.ai", "rise-pro")
         self.join("b@t.ai", "rise", sponsor_code=self.referral_code(sponsor))
@@ -313,6 +323,27 @@ class ActivityExpirationTests(BonusEngineTestMixin, TestCase):
         self.assertEqual(count, 1)
         self.assertFalse(partner.is_active)
         self.assertTrue(BinaryBalance.objects.get(partner=partner).is_frozen)
+
+    def test_expire_due_clears_tariff_after_12_months(self):
+        from django.utils import timezone
+
+        partner = self.join("p@t.ai", "rise")
+        PartnerProfile.objects.filter(pk=partner.pk).update(
+            is_active=False,
+            activity_until=timezone.now() - timezone.timedelta(days=400),
+        )
+        BinaryBalance.objects.filter(partner=partner).update(left_pv=50, right_pv=20, is_frozen=True)
+
+        from apps.partner.services import ActivityService
+
+        ActivityService.expire_due()
+
+        partner.refresh_from_db()
+        self.assertIsNone(partner.tariff_id)
+        self.assertIsNotNone(partner.tariff_lost_at)
+        bal = BinaryBalance.objects.get(partner=partner)
+        self.assertEqual(bal.left_pv, 0)
+        self.assertEqual(bal.right_pv, 0)
 
 
 class PartnerDashboardApiTests(BonusEngineTestMixin, TestCase):

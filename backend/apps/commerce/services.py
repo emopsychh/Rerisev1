@@ -45,12 +45,11 @@ class OrderService:
         )
 
         # При достаточном available_usd — мгновенная оплата с кошелька
-        # (тариф / подписка / токены / программа).
+        # (тариф / подписка / токены). Программы — только когда появится fulfill-handler.
         wallet_types = {
             Product.TYPE_TOKENS,
             Product.TYPE_TARIFF,
             Product.TYPE_SUBSCRIPTION,
-            Product.TYPE_PROGRAM,
         }
         if product.type in wallet_types and OrderService._wallet_can_cover(user, order.amount_usd):
             return OrderService._pay_with_wallet(user, order)
@@ -117,12 +116,13 @@ class OrderService:
 
     @staticmethod
     def _debit_store_purchase(user: User, order: Order, *, payment_id: int | None = None) -> None:
-        """Идемпотентное списание стоимости заказа с кошелька."""
+        """Идемпотентное списание стоимости заказа с кошелька (с блокировкой баланса)."""
         from decimal import Decimal
 
         from apps.ledger.constants import ENTRY_TYPE_STORE_PURCHASE
         from apps.ledger.models import Entry
-        from apps.ledger.services import LedgerWriter
+        from apps.ledger.services import LedgerError, LedgerWriter
+        from apps.wallet.models import Balance
         from apps.wallet.services import WalletUpdater
 
         key = f"store-purchase:{order.pk}"
@@ -130,7 +130,14 @@ class OrderService:
             WalletUpdater.refresh(user)
             return
 
+        balance, _ = Balance.objects.select_for_update().get_or_create(user=user)
+        WalletUpdater.refresh(user, locked_balance=balance)
         amount = Decimal(str(order.amount_usd))
+        if balance.available_usd < amount:
+            raise LedgerError(
+                f"Недостаточно средств на балансе: нужно ${amount}, доступно ${balance.available_usd}"
+            )
+
         LedgerWriter.debit(
             user,
             ENTRY_TYPE_STORE_PURCHASE,
@@ -144,7 +151,7 @@ class OrderService:
             idempotency_key=key,
             description=f"Покупка: {order.product.name}",
         )
-        WalletUpdater.refresh(user)
+        WalletUpdater.refresh(user, locked_balance=balance)
 
     @staticmethod
     def _validate(
@@ -369,39 +376,9 @@ class PaymentConfirmationService:
             payment.save(update_fields=["status", "paid_at", "updated_at"])
             return payment.order
 
-        # Manual-подтверждение: если на кошельке хватает средств и списания ещё не было —
-        # списываем (демо / PAYMENT_PROVIDER=manual). CryptoBot webhook не трогаем.
-        if payment.provider == "manual":
-            PaymentConfirmationService._try_debit_wallet_on_manual_confirm(
-                payment.order, payment_id=payment.pk
-            )
-
+        # Manual/crypto confirm = внешняя оплата. Списание с кошелька только
+        # через create_order → provider=wallet. Иначе двойное списание.
         payment.status = Payment.STATUS_PAID
         payment.paid_at = paid_at or timezone.now()
         payment.save(update_fields=["status", "paid_at", "updated_at"])
         return OrderFulfillmentService.fulfill(payment.order)
-
-    @staticmethod
-    def _try_debit_wallet_on_manual_confirm(order: Order, *, payment_id: int) -> None:
-        from decimal import Decimal
-
-        from apps.ledger.models import Entry
-        from apps.ledger.services import LedgerError
-        from apps.wallet.services import WalletUpdater
-
-        key = f"store-purchase:{order.pk}"
-        if Entry.objects.filter(idempotency_key=key).exists():
-            return
-        if order.payments.filter(provider="wallet", status=Payment.STATUS_PAID).exists():
-            return
-
-        amount = Decimal(str(order.amount_usd))
-        balance = WalletUpdater.refresh(order.user)
-        if balance.available_usd < amount:
-            return
-
-        try:
-            OrderService._debit_store_purchase(order.user, order, payment_id=payment_id)
-        except LedgerError:
-            # Не блокируем выдачу тарифа при ручном confirm, если ledger недоступен.
-            return

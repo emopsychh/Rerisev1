@@ -180,12 +180,20 @@ class BinaryCollapseService:
 
         income_usd = (Decimal(collapsed) / Decimal(BINARY_PV_PER_USD)).quantize(Decimal("0.01"))
 
+        source_id = getattr(source, "id", None) or getattr(source, "pk", None)
+        collapse_key = (
+            f"binary:{source_id}:{partner.user_id}:{collapsed}"
+            if source_id is not None
+            else None
+        )
+
         LedgerWriter.credit(
             partner.user,
             ENTRY_TYPE_BINARY_COLLAPSE,
             collapsed,
             CURRENCY_PV,
             source=source,
+            idempotency_key=f"{collapse_key}:pv" if collapse_key else None,
             metadata={"collapsed_pv": collapsed},
         )
         LedgerWriter.credit(
@@ -194,6 +202,7 @@ class BinaryCollapseService:
             income_usd,
             CURRENCY_USD,
             source=source,
+            idempotency_key=f"{collapse_key}:usd" if collapse_key else None,
             metadata={"collapsed_pv": collapsed},
         )
         WalletUpdater.refresh(partner.user)
@@ -222,16 +231,24 @@ class MatchingBonusService:
             caps = get_tariff_caps(current_sponsor.tariff_id)
             max_lines = caps["matching_lines"] if caps else 0
             if line > max_lines:
-                break
+                # Тариф спонсора не покрывает эту линию — идём выше, не рвём цепочку.
+                current_sponsor = get_sponsor_partner(current_sponsor)
+                continue
 
             matching_usd = (binary_income_usd * MATCHING_RATE).quantize(Decimal("0.01"))
             if matching_usd > 0:
+                source_id = getattr(source, "id", None) or getattr(source, "pk", None)
                 LedgerWriter.credit(
                     current_sponsor.user,
                     ENTRY_TYPE_MATCHING_BONUS,
                     matching_usd,
                     CURRENCY_USD,
                     source=source,
+                    idempotency_key=(
+                        f"match:{source_id}:{earner.user_id}:{current_sponsor.user_id}:{line}"
+                        if source_id is not None
+                        else None
+                    ),
                     metadata={
                         "from_partner": earner.user_id,
                         "line": line,
@@ -354,10 +371,19 @@ class FastStartService:
             return
         if timezone.now() > fs.window_end:
             return
-        if invited.tariff_id not in FAST_START_TARIFFS:
+
+        # Пересчёт: личные Pro/Max, размещённые в окне (включая Rise→Pro апгрейд).
+        fs = FastStart.objects.select_for_update().get(pk=fs.pk)
+        if fs.reward_paid:
             return
 
-        fs.qualified_count += 1
+        count = SponsorLink.objects.filter(
+            sponsor=sponsor,
+            partner__tariff_id__in=FAST_START_TARIFFS,
+            partner__placed_at__gte=fs.window_start,
+            partner__placed_at__lte=fs.window_end,
+        ).count()
+        fs.qualified_count = count
         fs.save(update_fields=["qualified_count", "updated_at"])
 
         if fs.qualified_count >= FAST_START_REQUIRED:
@@ -416,43 +442,45 @@ class BonusEngine:
 
         old_tariff = order.previous_tariff_id
         new_tariff = buyer.tariff_id
-        old_caps = get_tariff_caps(old_tariff) if old_tariff else None
-        new_caps = get_tariff_caps(new_tariff)
-        if not old_caps or not new_caps:
+        if not old_tariff or not get_tariff_caps(old_tariff) or not get_tariff_caps(new_tariff):
             return
-
-        bonus_diff = Decimal(new_caps["bonus_usd"]) - Decimal(old_caps["bonus_usd"])
-        pv_diff = int(new_caps["pv"]) - int(old_caps["pv"])
 
         sponsor = get_sponsor_partner(buyer)
-        if not sponsor or not sponsor.tariff_id:
-            return
+        # Дельта по матрице min(sponsor, tariff), а не «полный diff или ноль».
+        if sponsor and sponsor.tariff_id:
+            new_bonus, new_pv = calc_purchase_bonus(sponsor.tariff_id, new_tariff)
+            old_bonus, old_pv = calc_purchase_bonus(sponsor.tariff_id, old_tariff)
+            bonus_diff = new_bonus - old_bonus
+            pv_diff = new_pv - old_pv
 
-        sponsor_caps = get_tariff_caps(sponsor.tariff_id)
-        sponsor_bonus_cap = Decimal(sponsor_caps["bonus_usd"]) if sponsor_caps else Decimal("0")
-        if sponsor_bonus_cap < bonus_diff:
-            bonus_diff = Decimal("0")
-            pv_diff = 0
-
-        # Денежный бонус — по матрице активности (§10): платится, пока у спонсора
-        # сохраняется тариф (активен или неактивен <12 мес). PV распределяется вверх
-        # по бинару независимо; активность каждого узла проверяется в PvDistributionService.
-        if bonus_diff > 0:
-            LedgerWriter.credit(
-                sponsor.user,
-                ENTRY_TYPE_PERSONAL_BONUS,
-                bonus_diff,
-                CURRENCY_USD,
-                source=order,
-                idempotency_key=f"order:{order.id}:upgrade_bonus",
-                metadata={"buyer_id": buyer.user_id, "upgrade": f"{old_tariff}->{new_tariff}"},
-            )
-            WalletUpdater.refresh(sponsor.user)
+            if bonus_diff > 0:
+                LedgerWriter.credit(
+                    sponsor.user,
+                    ENTRY_TYPE_PERSONAL_BONUS,
+                    bonus_diff,
+                    CURRENCY_USD,
+                    source=order,
+                    idempotency_key=f"order:{order.id}:upgrade_bonus",
+                    metadata={
+                        "buyer_id": buyer.user_id,
+                        "upgrade": f"{old_tariff}->{new_tariff}",
+                    },
+                )
+                WalletUpdater.refresh(sponsor.user)
+        else:
+            # Без спонсора денежный бонус некому; PV всё равно идёт вверх по бинару.
+            old_caps = get_tariff_caps(old_tariff)
+            new_caps = get_tariff_caps(new_tariff)
+            pv_diff = int(new_caps["pv"]) - int(old_caps["pv"])
 
         if pv_diff > 0:
             PvDistributionService.process(
                 buyer, order, pv_diff, buyer_entry_type=ENTRY_TYPE_UPGRADE_PV
             )
+
+        # Fast Start: Rise→Pro/Max в окне должен засчитаться.
+        if sponsor:
+            FastStartService.track_invite(sponsor, buyer, order)
 
     @staticmethod
     @transaction.atomic

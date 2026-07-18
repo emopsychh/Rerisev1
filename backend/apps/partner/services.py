@@ -50,10 +50,13 @@ class ActivityService:
 
     @staticmethod
     def expire_due() -> int:
-        """Партнёры с истёкшей активностью → is_active=False, бинар заморожен.
-
-        Предназначено для ежедневного запуска (Celery/cron).
+        """Истёкшая активность → is_active=False, бинар заморожен.
+        После ~12 мес. непрерывной неактивности — сброс tariff_id (маркетинг §10).
         """
+        from datetime import timedelta
+
+        from apps.partner.engine_constants import INACTIVITY_TARIFF_LOSS_MONTHS
+
         now = timezone.now()
         due = PartnerProfile.objects.filter(is_active=True, activity_until__lt=now)
         count = 0
@@ -62,6 +65,25 @@ class ActivityService:
             partner.save(update_fields=["is_active", "updated_at"])
             ActivityService.set_frozen(partner, frozen=True)
             count += 1
+
+        # ~30.44 дня × N месяцев
+        loss_before = now - timedelta(days=int(INACTIVITY_TARIFF_LOSS_MONTHS * 30.44))
+        lost = PartnerProfile.objects.filter(
+            is_active=False,
+            tariff_id__isnull=False,
+            activity_until__lt=loss_before,
+            tariff_lost_at__isnull=True,
+        )
+        for partner in lost:
+            partner.tariff_id = None
+            partner.tariff_lost_at = now
+            partner.save(update_fields=["tariff_id", "tariff_lost_at", "updated_at"])
+            balance, _ = BinaryBalance.objects.get_or_create(partner=partner)
+            if balance.left_pv or balance.right_pv:
+                balance.left_pv = 0
+                balance.right_pv = 0
+                balance.save(update_fields=["left_pv", "right_pv", "updated_at"])
+
         return count
 
 
