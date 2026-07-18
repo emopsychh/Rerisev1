@@ -44,8 +44,15 @@ class OrderService:
             previous_tariff_id=previous_tariff_id,
         )
 
-        # AI-токены: при достаточном балансе кошелька — мгновенный обмен USD → токены.
-        if product.type == Product.TYPE_TOKENS and OrderService._wallet_can_cover(user, order.amount_usd):
+        # При достаточном available_usd — мгновенная оплата с кошелька
+        # (тариф / подписка / токены / программа).
+        wallet_types = {
+            Product.TYPE_TOKENS,
+            Product.TYPE_TARIFF,
+            Product.TYPE_SUBSCRIPTION,
+            Product.TYPE_PROGRAM,
+        }
+        if product.type in wallet_types and OrderService._wallet_can_cover(user, order.amount_usd):
             return OrderService._pay_with_wallet(user, order)
 
         provider = get_payment_provider()

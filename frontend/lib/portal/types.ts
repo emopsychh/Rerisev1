@@ -28,6 +28,7 @@ export type MarketOffer = {
   kind: "program" | "package" | "tokens";
   title: string;
   price: string;
+  priceUsd?: number;
   pv: string;
   text: string;
   features: string[];

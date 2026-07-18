@@ -252,3 +252,40 @@ class CommerceAPITestCase(TestCase):
 
         balance = WalletUpdater.refresh(self.user)
         self.assertEqual(balance.available_usd, Decimal("40.00"))
+
+    def test_tariff_pays_from_wallet_instantly(self):
+        from decimal import Decimal
+
+        from apps.ledger.constants import ENTRY_TYPE_ADJUSTMENT
+        from apps.ledger.services import LedgerWriter
+        from apps.partner.models import PartnerProfile
+        from apps.wallet.services import WalletUpdater
+
+        LedgerWriter.credit(
+            self.user,
+            ENTRY_TYPE_ADJUSTMENT,
+            Decimal("100.00"),
+            description="Тестовое пополнение под тариф",
+            idempotency_key="test-wallet-topup-tariff",
+        )
+        WalletUpdater.refresh(self.user)
+
+        self.client.credentials(**self.auth)
+        response = self.client.post(
+            "/api/v1/store/orders",
+            {"product_id": "rise", "order_type": "purchase"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = response.data["data"]
+        self.assertEqual(data["status"], "paid")
+        self.assertEqual(data["payment"]["provider"], "wallet")
+        self.assertIsNone(data["payment"]["payment_url"])
+
+        partner = PartnerProfile.objects.filter(user=self.user).first()
+        self.assertIsNotNone(partner)
+        self.assertTrue(partner.is_active)
+        self.assertEqual(partner.tariff_id, "rise")
+
+        balance = WalletUpdater.refresh(self.user)
+        self.assertEqual(balance.available_usd, Decimal("10.00"))

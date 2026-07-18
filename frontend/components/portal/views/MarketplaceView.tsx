@@ -15,10 +15,15 @@ import { PortalLoading } from "../shared/PortalLoading";
 export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: NotifyFn; marketTab: MarketTab }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { tariffs, tokens, reload, home, ready } = usePortalBackend();
+  const { tariffs, tokens, reload, home, ready, wallet } = usePortalBackend();
   const [selectedOffer, setSelectedOffer] = useState<MarketOffer | null>(() => marketOfferFromPathname(pathname));
   const [purchaseStep, setPurchaseStep] = useState<"details" | "ready">("details");
   const [ordering, setOrdering] = useState(false);
+  const [lastPaidFromWallet, setLastPaidFromWallet] = useState(false);
+
+  const availableUsd = Number(
+    (wallet?.balance as { available_usd?: number } | undefined)?.available_usd ?? 0,
+  );
 
   const apiPackages = tariffs.map((item) => {
     const terms = (item.terms as Record<string, unknown> | undefined) || {};
@@ -30,6 +35,7 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
       title: String(item.name || item.id),
       productId: String(item.id),
       price: `$${Number(item.price_usd || 0)}`,
+      priceUsd: Number(item.price_usd || 0),
       pv: `${purchasePv} PV`,
       text: String(item.description || ""),
       eyebrow: "RE:RISE",
@@ -77,9 +83,16 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
     setOrdering(true);
     try {
       const order = await createOrder(productId, orderType);
-      const paidFromWallet = order.status === "paid" && (!order.payment?.payment_url || order.payment?.provider === "wallet");
+      const paidFromWallet = order.status === "paid" && (
+        order.payment?.provider === "wallet" || !order.payment?.payment_url
+      );
+      setLastPaidFromWallet(paidFromWallet);
       if (paidFromWallet) {
-        notify(t(`Токены зачислены · заказ #${order.order_id}`));
+        notify(
+          selectedOffer?.kind === "tokens"
+            ? t(`Токены зачислены · заказ #${order.order_id}`)
+            : t(`Оплачено с баланса · заказ #${order.order_id}`),
+        );
       } else {
         notify(t(`Заказ #${order.order_id} создан (${order.status})`));
         if (order.payment?.payment_url) {
@@ -98,6 +111,7 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
   const openOffer = (offer: MarketOffer) => {
     setSelectedOffer(offer);
     setPurchaseStep("details");
+    setLastPaidFromWallet(false);
     router.push(marketOfferHref(offer), { scroll: false });
   };
 
@@ -123,6 +137,7 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
           kind: "tokens",
           title: pack.title,
           price: pack.price,
+          priceUsd: pack.priceUsd,
           pv: pack.pv,
           text: pack.text,
           features: pack.features,
@@ -186,11 +201,12 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
                     kind: "package",
                     title: item.title,
                     price: item.price,
+                    priceUsd: item.priceUsd,
                     pv: item.pv,
                     text: item.text,
                     features: item.features,
                     productId: item.productId,
-                  } as MarketOffer & { productId?: string })}>{t("Оформить")}</button>
+                  })}>{availableUsd >= item.priceUsd ? t("С баланса") : t("Оформить")}</button>
                 </div>
               </article>
             ))}
@@ -260,13 +276,14 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
                       kind: "tokens",
                       title: item.title,
                       price: item.price,
+                      priceUsd: item.priceUsd,
                       pv: item.pv,
                       text: item.text,
                       features: item.features,
                       productId: item.productId,
                     })}
                   >
-                    {t("Купить")}
+                    {availableUsd >= item.priceUsd ? t("С баланса") : t("Купить")}
                   </button>
                 </div>
               </article>
@@ -297,45 +314,71 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
                 <h4>{t("Что входит")}</h4>
                 {selectedOffer.features.map((feature) => <span key={feature}><Check size={16} /> {t(feature)}</span>)}
               </div>
-              <div className="marketing-plan-notice">
-                <ShieldCheck size={17} />
-                <p>{selectedOffer.kind === "package"
-                  ? t("Показаны утверждённые параметры маркетинг-плана. После оплаты заказ подтверждается провайдером платежей.")
-                  : selectedOffer.kind === "program"
-                    ? t("Цена, PV, состав доступа и способ оплаты программы пока не утверждены.")
-                    : t("Пакеты токенов: при достаточном балансе кошелька USD списываются сразу и токены начисляются мгновенно. Иначе создаётся внешний платёж. PV не начисляется.")}</p>
-              </div>
-              <footer className="portal-dialog-actions">
-                <button onClick={closeOffer}>{t("Отмена")}</button>
-                <button disabled={ordering} onClick={async () => {
-                  const productId = selectedOffer.productId
-                    || (selectedOffer.title === "Rise" ? "rise"
-                      : selectedOffer.title === "Rise Pro" ? "rise-pro"
-                      : selectedOffer.title === "Rise Pro Max" ? "rise-pro-max"
-                      : "");
-                  if (selectedOffer.kind === "package" || selectedOffer.kind === "tokens") {
-                    if (!productId) {
-                      notify(t("Не удалось определить продукт"));
-                      return;
-                    }
-                    await placeOrder(productId, "purchase");
-                    return;
-                  }
-                  setPurchaseStep("ready");
-                  notify(t("Уведомление о запуске программы включено"));
-                }}>{selectedOffer.kind === "package" || selectedOffer.kind === "tokens" ? t("Оформить заказ") : t("Уведомить о запуске")} <ChevronRight size={17} /></button>
-              </footer>
+              {(() => {
+                const priceUsd = Number(
+                  selectedOffer.priceUsd
+                  ?? String(selectedOffer.price).replace(/[^0-9.]/g, "")
+                  ?? 0,
+                );
+                const canPayWallet = (
+                  (selectedOffer.kind === "package" || selectedOffer.kind === "tokens")
+                  && priceUsd > 0
+                  && availableUsd >= priceUsd
+                );
+                return (
+                  <>
+                    <div className="marketing-plan-notice">
+                      <ShieldCheck size={17} />
+                      <p>{selectedOffer.kind === "package"
+                        ? (canPayWallet
+                          ? t(`На кошельке $${availableUsd.toFixed(2)} — хватит для оплаты с баланса. Тариф активируется сразу.`)
+                          : t(`Баланс кошелька: $${availableUsd.toFixed(2)}. Если средств не хватит, будет создан внешний счёт.`))
+                        : selectedOffer.kind === "program"
+                          ? t("Цена, PV, состав доступа и способ оплаты программы пока не утверждены.")
+                          : (canPayWallet
+                            ? t(`На кошельке $${availableUsd.toFixed(2)} — токены спишутся с баланса сразу.`)
+                            : t("Пакеты токенов: при достаточном балансе USD списываются сразу. Иначе — внешний платёж. PV не начисляется."))}</p>
+                    </div>
+                    <footer className="portal-dialog-actions">
+                      <button onClick={closeOffer}>{t("Отмена")}</button>
+                      <button disabled={ordering} onClick={async () => {
+                        const productId = selectedOffer.productId
+                          || (selectedOffer.title === "Rise" ? "rise"
+                            : selectedOffer.title === "Rise Pro" ? "rise-pro"
+                            : selectedOffer.title === "Rise Pro Max" ? "rise-pro-max"
+                            : "");
+                        if (selectedOffer.kind === "package" || selectedOffer.kind === "tokens") {
+                          if (!productId) {
+                            notify(t("Не удалось определить продукт"));
+                            return;
+                          }
+                          await placeOrder(productId, "purchase");
+                          return;
+                        }
+                        setPurchaseStep("ready");
+                        notify(t("Уведомление о запуске программы включено"));
+                      }}>{selectedOffer.kind === "package" || selectedOffer.kind === "tokens"
+                        ? (canPayWallet ? t("Оплатить с баланса") : t("Оформить заказ"))
+                        : t("Уведомить о запуске")} <ChevronRight size={17} /></button>
+                    </footer>
+                  </>
+                );
+              })()}
             </>
           ) : (
             <div className="purchase-ready">
               <span><CheckCircle2 size={34} /></span>
               <h3>{t(selectedOffer.title)}</h3>
               <p>{selectedOffer.kind === "package"
-                ? t("Заказ тарифа создан. Оплатите счёт, чтобы активировать доступ.")
+                ? (lastPaidFromWallet
+                  ? t("Тариф оплачен с баланса и уже активен.")
+                  : t("Заказ тарифа создан. Оплатите счёт, чтобы активировать доступ."))
                 : selectedOffer.kind === "program"
                   ? t("Мы сообщим, когда будут утверждены цена, состав доступа и способ оплаты программы.")
-                  : t("Если на кошельке хватало USD — токены уже на балансе AI Hub. Иначе оплатите внешний счёт.")}</p>
-              <div><span>{t("Статус")}</span><strong>{selectedOffer.kind === "program" ? t("Условия в проработке") : t("Заказ обработан")}</strong></div>
+                  : (lastPaidFromWallet
+                    ? t("Токены уже на балансе AI Hub.")
+                    : t("Оплатите внешний счёт — после оплаты токены появятся в AI Hub."))}</p>
+              <div><span>{t("Статус")}</span><strong>{selectedOffer.kind === "program" ? t("Условия в проработке") : (lastPaidFromWallet ? t("Оплачено") : t("Заказ обработан"))}</strong></div>
               {selectedOffer.kind === "package" || selectedOffer.kind === "tokens" ? <div><span>{t("Стоимость")}</span><strong>{selectedOffer.price}</strong></div> : null}
               <button onClick={closeOffer}>{t("Готово")}</button>
             </div>
