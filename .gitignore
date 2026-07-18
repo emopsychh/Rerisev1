@@ -5,6 +5,7 @@ db.sqlite3
 .env
 .env.local
 .env.*.local
+!.env.example
 .venv/
 venv/
 backend/.venv/

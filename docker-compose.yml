@@ -1,7 +1,7 @@
 # ReRise production stack
-# Usage (from repo root):
-#   cp docker/.env.example docker/.env   # edit secrets / domain
-#   docker compose -f docker-compose.prod.yml --env-file docker/.env up -d --build
+# From repo root:
+#   cp .env.example .env   # edit secrets
+#   docker compose up -d --build
 
 name: rerise
 
@@ -40,7 +40,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     env_file:
-      - ./docker/.env
+      - .env
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: "5432"
@@ -74,7 +74,7 @@ services:
     restart: unless-stopped
     command: ["celery", "-A", "config", "worker", "-l", "info"]
     env_file:
-      - ./docker/.env
+      - .env
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: "5432"
@@ -102,7 +102,7 @@ services:
     restart: unless-stopped
     command: ["celery", "-A", "config", "beat", "-l", "info"]
     env_file:
-      - ./docker/.env
+      - .env
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: "5432"

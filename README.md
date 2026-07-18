@@ -4,10 +4,12 @@ Monorepo: Django API + Next.js portal.
 
 ```text
 Rerise/
-  backend/     # Django 5 + DRF + PostgreSQL
-  frontend/    # Next.js 15 (product shell)
-  docker/      # prod nginx + env template
-  docs/        # canonical API / ROADMAP (not frontend/docs)
+  backend/              # Django API (+ local docker-compose: postgres/redis)
+  frontend/             # Next.js portal
+  docker/nginx/         # nginx config for production compose
+  docker-compose.yml    # production stack (use from repo root)
+  .env.example          # production env template → copy to .env
+  docs/
 ```
 
 ## Quick start
@@ -44,19 +46,24 @@ npm run dev
 
 ## Production (Docker)
 
-From repo root on the VPS:
+From **repo root** on the VPS:
 
 ```bash
-cp docker/.env.example docker/.env
-# edit secrets, PUBLIC_HOST / DJANGO_* / RERISE_REFERRAL_BASE_URL
+cp .env.example .env
+# edit secrets / hosts in .env
 
-docker compose -f docker-compose.prod.yml --env-file docker/.env up -d --build
+docker compose up -d --build
+docker compose exec api python manage.py createsuperuser
+```
 
-# optional demo data (once):
-# set RUN_SEED_DEMO=true in docker/.env, then:
-docker compose -f docker-compose.prod.yml --env-file docker/.env up -d --force-recreate api
+Usual commands (same directory):
 
-docker compose -f docker-compose.prod.yml exec api python manage.py createsuperuser
+```bash
+docker compose up -d
+docker compose down
+docker compose ps
+docker compose logs -f
+docker compose exec api python manage.py createsuperuser
 ```
 
 Stack: `nginx` → `web` (Next) + `api` (gunicorn) + `celery` + `celery-beat` + `postgres` + `redis`.
@@ -66,6 +73,7 @@ Stack: `nginx` → `web` (Next) + `api` (gunicorn) + `celery` + `celery-beat` + 
 - Admin: `http://<host>/admin/`
 
 Local infra only (Postgres + Redis): `cd backend && docker compose up -d`
+
 
 ## Docs
 
