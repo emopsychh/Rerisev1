@@ -55,14 +55,30 @@ class UserRegistrationService:
 
     @staticmethod
     def _resolve_inviter(referral_code: str) -> User:
-        try:
-            code = ReferralCode.objects.select_related("user").get(
-                code=referral_code,
-                is_active=True,
-            )
-        except ReferralCode.DoesNotExist as exc:
-            raise ReferralCodeError("Неверный реферальный код") from exc
-        return code.user
+        # Коды хранятся в верхнем регистре; в ссылке могут прийти в другом.
+        raw = (referral_code or "").strip()
+        if not raw:
+            raise ReferralCodeError("Неверный реферальный код")
+
+        code = (
+            ReferralCode.objects.select_related("user")
+            .filter(is_active=True, code__iexact=raw)
+            .first()
+        )
+        if code:
+            return code.user
+
+        # Частая путаница: в ссылку копируют public_id вместо referral_code.
+        profile = (
+            Profile.objects.select_related("user")
+            .filter(public_id__iexact=raw)
+            .first()
+        )
+        if profile:
+            return profile.user
+
+        raise ReferralCodeError("Неверный реферальный код")
+
 
     @staticmethod
     def get_referral_url(user: User) -> str:

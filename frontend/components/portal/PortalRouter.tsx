@@ -4,7 +4,8 @@ import { Suspense, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { PortalAppContent } from "./PortalApp";
 
-const AUTH_PREFIXES = ["/login", "/register"];
+const AUTH_PREFIXES = ["/login", "/register", "/join"];
+
 
 function isAuthRoute(pathname: string) {
   return AUTH_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));

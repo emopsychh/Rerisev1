@@ -25,19 +25,24 @@ class UserAdmin(ModelAdmin):
     list_display = (
         "email",
         "phone",
-        "invited_by",
+        "invited_by_email",
         "is_active",
         "is_staff",
         "created_at",
     )
     search_fields = ("email", "phone", "profile__public_id", "invited_by__email")
     list_filter = ("is_active", "is_staff", "created_at")
-    readonly_fields = ("created_at", "updated_at", "last_login_at", "invited_by")
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+        "last_login_at",
+        "invited_by_email",
+    )
     actions = ["block_users", "unblock_users"]
     fields = (
         "email",
         "phone",
-        "invited_by",
+        "invited_by_email",
         "is_active",
         "is_staff",
         "is_superuser",
@@ -47,6 +52,12 @@ class UserAdmin(ModelAdmin):
         "created_at",
         "updated_at",
     )
+
+    @admin.display(description="Пригласивший", ordering="invited_by__email")
+    def invited_by_email(self, obj: User) -> str:
+        if obj.invited_by_id and obj.invited_by:
+            return obj.invited_by.email
+        return "—"
 
     @admin.action(description="Заблокировать пользователей")
     def block_users(self, request, queryset):

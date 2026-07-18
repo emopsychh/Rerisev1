@@ -77,6 +77,19 @@
   font-size: 13px;
 }
 
+.auth-hint {
+  margin: -4px 0 4px;
+  font-size: 13px;
+  line-height: 1.45;
+  opacity: 0.78;
+}
+
+.auth-card input[readonly] {
+  opacity: 0.85;
+  cursor: default;
+  background: color-mix(in srgb, var(--theme-accent, #3d8bfd) 12%, var(--theme-bg, #0b0d12));
+}
+
 .auth-switch {
   margin: 4px 0 0;
   font-size: 14px;
