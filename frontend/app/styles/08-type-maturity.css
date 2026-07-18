@@ -1,0 +1,1035 @@
+/* --------------------------------------------------------------------------
+   RE:RISE typography system
+
+   A compact role scale replaces accumulated one-off sizes. Display headings
+   remain responsive, while navigation, controls, rows and data stay stable.
+   -------------------------------------------------------------------------- */
+:root {
+  --type-caption: 12px;
+  --type-meta: 12px;
+  --type-body: 14px;
+  --type-control: 14px;
+  --type-row-title: 16px;
+  --type-subsection-title: 18px;
+  --type-card-title: 20px;
+  --type-topbar-title: 20px;
+  --type-section-title: 24px;
+  --type-page-title: 32px;
+  --type-display: clamp(40px, 3.4vw, 54px);
+  --weight-regular: 400;
+  --weight-meta: 400;
+  --weight-control: 500;
+  --weight-label: 600;
+  --weight-emphasis: 600;
+  --weight-title: 600;
+  --weight-heading: 600;
+  --weight-display: 700;
+  --leading-caption: 16px;
+  --leading-meta: 17px;
+  --leading-control: 20px;
+  --leading-row: 22px;
+  --leading-subsection: 23px;
+  --leading-body: 20px;
+  --leading-reading: 24px;
+  --leading-compact: 1.16;
+  --icon-compact: 16px;
+  --icon-control: 20px;
+  --hit-compact: 40px;
+  --hit-standard: 44px;
+}
+
+body {
+  font-size: var(--type-body);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-body);
+}
+
+:root button,
+:root input,
+:root textarea,
+:root select {
+  font-size: var(--type-control);
+  font-weight: var(--weight-control);
+}
+
+:root small,
+:root time {
+  font-size: var(--type-caption);
+  font-weight: var(--weight-meta);
+  line-height: var(--leading-caption);
+}
+
+/* A calmer default weight across the whole application surface. */
+:root :is(.portal-main, .portal-sidebar, .portal-topbar, .portal-dialog, .crm-modal) :is(h1, h2, h3, h4, h5, h6) {
+  font-weight: var(--weight-heading);
+}
+
+:root :is(.portal-main, .portal-sidebar, .portal-topbar, .portal-dialog, .crm-modal) :is(strong, b) {
+  font-weight: var(--weight-emphasis);
+}
+
+:root .brand strong {
+  font-weight: var(--weight-display);
+}
+
+/* Primary navigation and recurring controls. */
+:root .side-link,
+:root .side-link span,
+:root .topbar-section-switch button,
+:root .invite-button,
+:root .sidebar-card button,
+:root .support-button,
+:root .language-switcher > button,
+:root .language-menu button,
+:root .mobile-link,
+:root .academy-filters button,
+:root .catalog-toolbar > div button,
+:root .labor-filter-tabs button,
+:root .wallet-period-presets button,
+:root .wallet-history-types button,
+:root .workspace-shell .model-tabs button,
+:root .workspace-shell .workspace-scenarios > button,
+:root .result-actions button,
+:root .crm-modal .crm-modal-actions button,
+:root .crm-modal .crm-quick-actions-card .crm-modal-actions button,
+:root .crm-note-composer > footer button,
+:root .withdraw-address button {
+  font-size: var(--type-control);
+  font-weight: var(--weight-control);
+  line-height: 1.2;
+}
+
+/* Persistent primary CTAs retain a stronger, more decisive label. */
+:root .invite-button,
+:root .pro-card button {
+  font-weight: var(--weight-title);
+}
+
+/* Eyebrows, badges, dates and technical labels. */
+:root :is(
+  .cabinet-panel-eyebrow,
+  .cabinet-team-depth-heading > div > span,
+  .course-kicker,
+  .bundle-eyebrow,
+  .detail-module-label,
+  .academy-head > div:first-child > span,
+  .ai-console-head > span,
+  .portal-dialog-head > span,
+  .marketing-channel-hero > div > span,
+  .community-intro > div:first-child > span,
+  .marketing-feed header > span,
+  .marketing-rhythm > span,
+  .material-copy > span,
+  .marketplace-package-intro > span,
+  .crm-section-heading > div > span,
+  .lesson-preview-player > span,
+  .material-preview-sheet > span,
+  .home-ai-box-copy > span,
+  .promo-banner-copy > span,
+  .banner-chip,
+  .hero-badge,
+  .market-card-top > span,
+  .program-card .market-card-top em,
+  .course-commercial-tags em,
+  .course-commercial-tags span
+) {
+  font-size: var(--type-caption);
+  font-weight: var(--weight-label);
+  line-height: 1.25;
+}
+
+/* Secondary information and compact data. */
+:root :is(
+  .brand small,
+  .topbar-title > span,
+  .sidebar-card small,
+  .cabinet-team-depth-heading p,
+  .cabinet-team-depth-heading small,
+  .cabinet-depth-activity span,
+  .cabinet-depth-volume span,
+  .cabinet-period-metric span,
+  .cabinet-period-metric small,
+  .course-module-head em,
+  .course-module-head p,
+  .course-module-head small,
+  .course-resource-grid em,
+  .course-resource-grid p,
+  .course-resource-grid small,
+  .course-module-lessons.lesson-list small,
+  .course-topline em,
+  .course-topline > span:last-child,
+  .crm-edit-field > span,
+  .crm-side-edit > span,
+  .crm-section-heading small,
+  .crm-timeline-event p,
+  .crm-timeline-event time,
+  .crm-activity-list p span,
+  .crm-activity-list time,
+  .labor-project-meta span,
+  .labor-project-card footer span,
+  .labor-skill-list span,
+  .market-summary span,
+  .materials-pills span,
+  .partner-card-bottom span,
+  .partner-line-meta small,
+  .wallet-row em,
+  .wallet-method small,
+  .wallet-history-hint,
+  .wallet-method-note,
+  .wallet-period-copy small,
+  .withdraw-address > small,
+  .withdraw-amount > small,
+  .withdraw-network-card small,
+  .withdraw-network-card p,
+  .withdraw-remember small,
+  .withdraw-security-code > div small,
+  .withdraw-warning p,
+  .rank-detail-card > small,
+  .rank-detail-card > span,
+  .rank-detail-meta span,
+  .rank-dialog-summary span
+) {
+  font-size: var(--type-meta);
+  font-weight: var(--weight-meta);
+  line-height: 1.4;
+}
+
+/* Normal reading text across every product surface. */
+:root .portal-main :is(
+  .page-heading p,
+  .hero-copy p,
+  .product-copy p,
+  .promo-banner-copy p,
+  .detail-hero p,
+  .detail-hero.rich-course-hero p,
+  .program-card p,
+  .market-card p,
+  .package-main p,
+  .bundle-main p,
+  .subscription-card p,
+  .materials-hero p,
+  .material-copy p,
+  .labor-project-card p,
+  .chat-space-card p,
+  .community-intro p,
+  .marketing-channel-hero p,
+  .marketing-value-grid p,
+  .structure-hero-copy p,
+  .profile-panel p,
+  .wallet-panel p,
+  .crm-deal p,
+  .crm-note-composer textarea,
+  .invite-side > p,
+  .renewal-summary p
+) {
+  font-size: var(--type-body);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-body);
+}
+
+/* Card and modal subsection titles. */
+:root :is(
+  .program-card h3,
+  .market-card h3,
+  .material-copy h3,
+  .labor-project-card h2,
+  .chat-space-card h2,
+  .rail-card h3,
+  .partner-income h3,
+  .crm-section-heading h4,
+  .wallet-panel-head h3,
+  .profile-panel-head h3,
+  .marketing-value-grid h3,
+  .plan-step h3,
+  .course-module-head strong,
+  .course-resource-grid strong,
+  .lesson-list strong,
+  .material-file-list strong,
+  .profile-field strong,
+  .profile-status-row strong,
+  .withdraw-verify-head strong
+) {
+  font-size: var(--type-card-title);
+  font-weight: var(--weight-title);
+  line-height: 1.25;
+}
+
+/* Section titles. */
+:root :is(
+  .section-heading h2,
+  .cabinet-team-depth-heading h3,
+  .academy-head h2,
+  .materials-hero h2,
+  .community-intro h2,
+  .marketing-feed header h2,
+  .marketing-rhythm h2,
+  .marketplace-package-intro h2,
+  .assistant-result h3,
+  .course-overlay h3,
+  .purchase-summary h3,
+  .renewal-summary h3,
+  .material-preview-sheet h3,
+  .rank-detail-card h3
+) {
+  font-size: var(--type-section-title);
+  font-weight: var(--weight-heading);
+  line-height: var(--leading-compact);
+}
+
+:root .topbar-title h1 {
+  font-size: var(--type-topbar-title);
+  font-weight: var(--weight-heading);
+  line-height: var(--leading-compact);
+}
+
+/* Page and dialog titles. */
+:root :is(
+  .page-heading h1,
+  .portal-dialog-head h2,
+  .crm-modal-identity h3,
+  .crm-modal-backdrop .crm-modal-identity h3,
+  .profile-identity h3,
+  .next-step-primary h2,
+  .mobile-more-sheet header h2
+) {
+  font-size: var(--type-page-title);
+  font-weight: var(--weight-heading);
+  line-height: 1.08;
+}
+
+/* Marketing/display headings are the only intentionally fluid tier. */
+:root :is(
+  .hero-copy h1,
+  .product-copy h1,
+  .plan-copy h1,
+  .detail-hero h2,
+  .structure-hero-copy h2,
+  .market-head h2,
+  .bundle-main h3,
+  .package-main h3,
+  .subscription-card h3
+) {
+  font-size: var(--type-display);
+  font-weight: var(--weight-display);
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+}
+
+/* Numeric KPIs use one consistent display value. */
+:root :is(
+  .cabinet-kpi > strong,
+  .kpi-card > strong,
+  .crm-stat > strong,
+  .analytics-card > strong,
+  .branch-card > strong,
+  .wallet-card > strong,
+  .wallet-payout-card > strong,
+  .partner-metric > strong,
+  .partner-income > strong,
+  .ai-usage > strong,
+  .workspace-balance > strong
+) {
+  font-size: var(--type-page-title);
+  font-weight: var(--weight-emphasis);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+/* --------------------------------------------------------------------------
+   RE:RISE visual maturity pass
+
+   The rules below are deliberately role-based and live after legacy component
+   declarations. They keep the existing visual language while making type,
+   icons, hit targets and dense data predictable on every route.
+   -------------------------------------------------------------------------- */
+
+:root :is(.portal-shell, .portal-dialog, .crm-modal) {
+  font-kerning: normal;
+  font-variant-ligatures: contextual common-ligatures;
+}
+
+:root :is(.portal-main, .portal-dialog, .crm-modal) :is(h1, h2, h3, h4) {
+  text-wrap: balance;
+}
+
+:root :is(.portal-main, .portal-dialog, .crm-modal) p {
+  text-wrap: pretty;
+}
+
+:root :is(button, a, input, textarea, select, [role="button"], [tabindex]):focus-visible {
+  outline: 2px solid var(--theme-focus);
+  outline-offset: 3px;
+}
+
+:root :is(
+  .cabinet-kpi,
+  .cabinet-depth-level,
+  .cabinet-depth-activity,
+  .cabinet-depth-volume,
+  .partner-card,
+  .partner-metric,
+  .partner-income,
+  .crm-column-title,
+  .crm-deal,
+  .wallet-hero,
+  .wallet-card,
+  .wallet-row,
+  .wallet-payout-card,
+  .withdraw-amount,
+  .withdraw-summary,
+  .withdraw-verify-details,
+  .purchase-price,
+  .package-price,
+  .market-summary
+) {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* Sidebar navigation is intentionally denser than primary controls: its visual
+   plate stays compact while the surrounding sidebar remains easy to scan. */
+:root .side-link {
+  min-height: 36px;
+  gap: 10px;
+  border-radius: 11px;
+  padding-inline: 12px;
+  font-size: var(--type-control);
+  font-weight: var(--weight-control);
+  line-height: var(--leading-control);
+}
+
+:root .side-link.active {
+  font-weight: var(--weight-label);
+}
+
+:root .side-link > svg {
+  width: var(--icon-control);
+  height: var(--icon-control);
+  flex: 0 0 var(--icon-control);
+  stroke-width: 1.8;
+}
+
+:root .topbar-section-switch button {
+  min-height: var(--hit-compact);
+}
+
+:root .topbar-actions :is(.topbar-theme-toggle, .language-switcher, .bell-button) {
+  min-width: var(--hit-standard);
+  min-height: var(--hit-standard);
+}
+
+:root .language-switcher > button {
+  width: 100%;
+  min-width: var(--hit-standard);
+  height: auto;
+  min-height: var(--hit-standard);
+}
+
+:root .language-menu button {
+  min-height: var(--hit-compact);
+}
+
+:root .theme-toggle-icon {
+  width: var(--icon-compact);
+  height: var(--icon-compact);
+  stroke-width: 1.8;
+}
+
+:root :is(.invite-button, .bell-button, .topbar-back) svg {
+  width: var(--icon-control);
+  height: var(--icon-control);
+  stroke-width: 1.8;
+}
+
+:root :is(
+  .topbar-back,
+  .banner-arrow,
+  .portal-dialog-head > button,
+  .withdraw-dialog .portal-dialog-head > button,
+  .mobile-more-sheet header button,
+  .crm-modal-backdrop .crm-drawer-shell > .crm-modal-close
+) {
+  width: var(--hit-standard);
+  height: var(--hit-standard);
+}
+
+:root .crm-column header > button {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+}
+
+:root .crm-column header > button::before {
+  position: absolute;
+  inset: -6px;
+  content: "";
+}
+
+:root .crm-column header > button svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+}
+
+:root :is(
+  .academy-filters button,
+  .catalog-toolbar > div button,
+  .labor-filter-tabs button,
+  .structure-filter-row button,
+  .wallet-period-presets button,
+  .wallet-history-types button,
+  .wallet-history-period,
+  .wallet-panel-head button,
+  .profile-panel-head button,
+  .profile-link-row button,
+  .workspace-shell .model-tabs button,
+  .result-actions button,
+  .workspace-side-head > button,
+  .prompt-composer > div > button,
+  .invite-link-field button,
+  .invite-actions button,
+  .partner-card-top button
+) {
+  min-height: var(--hit-compact);
+}
+
+:root :is(
+  .wallet-period-presets .wallet-calendar-button,
+  .structure-rank-strip > button,
+  .material-actions button,
+  .program-purchase-bottom > button,
+  .product-home .course-bottom > button,
+  .chat-space-card > button,
+  .labor-project-card footer button,
+  .crm-modal-stagebar button,
+  .crm-note-composer > footer button,
+  .withdraw-dialog .withdraw-address button,
+  .withdraw-dialog .withdraw-amount button,
+  .withdraw-dialog .withdraw-security-code button,
+  .withdraw-dialog .withdraw-remember,
+  .withdraw-dialog .portal-dialog-actions button
+) {
+  min-height: var(--hit-standard);
+}
+
+:root .notification-popover > div button {
+  min-height: var(--hit-compact);
+}
+
+/* Carousel dots remain visually delicate, but no longer have a 9px hit area. */
+:root .banner-dots {
+  gap: 0;
+}
+
+:root .banner-dots button {
+  position: relative;
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  min-height: 24px;
+  flex-basis: 24px;
+  border: 0;
+  background: transparent;
+  transform: none;
+}
+
+:root .banner-dots button::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 9px;
+  height: 9px;
+  border: 2px solid rgba(247, 247, 243, 0.34);
+  border-radius: 50%;
+  background: transparent;
+  content: "";
+  transform: translate(-50%, -50%);
+  transition: border-color 220ms ease, background 220ms ease, transform 220ms ease;
+}
+
+:root .banner-dots button.active {
+  border: 0;
+  background: transparent;
+  transform: none;
+}
+
+:root .banner-dots button.active::after {
+  border-color: rgba(247, 247, 243, 0.94);
+  background: rgba(247, 247, 243, 0.94);
+  transform: translate(-50%, -50%) scale(1.12);
+}
+
+/* Reading roles. Long-form introductions get 16/24; cards remain 14/20. */
+:root .portal-main :is(
+  .detail-hero.rich-course-hero p,
+  .academy-head p,
+  .materials-hero p,
+  .community-intro > p,
+  .marketing-channel-hero > div > p,
+  .structure-hero-copy p,
+  .market-head > p,
+  .page-heading > p
+) {
+  font-size: var(--type-row-title);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-reading);
+}
+
+:root .portal-main :is(
+  .program-card p,
+  .market-card p,
+  .material-copy p,
+  .labor-project-card p,
+  .chat-space-card p,
+  .marketing-value-grid p,
+  .package-main p,
+  .subscription-card p,
+  .crm-deal p
+) {
+  color: var(--theme-text-muted);
+  font-size: var(--type-body);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-body);
+}
+
+/* Dense row titles are not card headings. */
+:root :is(
+  .course-intro-lesson strong,
+  .course-module-head strong,
+  .course-module-lessons.lesson-list strong,
+  .lesson-list strong,
+  .material-file-list strong,
+  .course-resource-grid strong,
+  .profile-field strong,
+  .profile-status-row strong
+) {
+  font-size: var(--type-row-title);
+  font-weight: var(--weight-label);
+  line-height: var(--leading-row);
+}
+
+:root :is(
+  .crm-section-heading h4,
+  .wallet-panel-head h3,
+  .profile-panel-head h3
+) {
+  font-size: var(--type-subsection-title);
+  font-weight: var(--weight-label);
+  line-height: var(--leading-subsection);
+}
+
+/* Meaningful supporting text never drops below 12px or low-contrast alpha. */
+:root :is(
+  .course-module-head small,
+  .course-module-head em,
+  .course-module-lessons.lesson-list small,
+  .course-topline em,
+  .course-topline > span:last-child,
+  .course-current-step span,
+  .course-current-step small,
+  .course-side-meta span,
+  .course-resource-grid small,
+  .course-resource-grid em,
+  .crm-edit-field > span,
+  .crm-side-edit > span,
+  .crm-section-heading small,
+  .crm-timeline-event p,
+  .crm-timeline-event time,
+  .crm-activity-list p span,
+  .crm-activity-list time,
+  .wallet-row p,
+  .wallet-row em,
+  .wallet-method small,
+  .wallet-history-hint,
+  .wallet-period-copy small,
+  .withdraw-address > small,
+  .withdraw-amount > small,
+  .withdraw-network-card small,
+  .withdraw-network-card p,
+  .withdraw-remember small,
+  .withdraw-security-code > div small,
+  .withdraw-warning p,
+  .partner-line-meta small,
+  .rank-detail-meta span,
+  .rank-detail-card > small,
+  .labor-project-card footer span,
+  .materials-pills span
+) {
+  color: var(--theme-text-muted);
+  font-size: var(--type-meta);
+  font-weight: var(--weight-meta);
+  line-height: var(--leading-meta);
+}
+
+/* Course architecture: generous introduction, compact and readable modules. */
+:root .detail-hero.rich-course-hero p {
+  max-width: 900px;
+}
+
+:root .course-intro-lesson {
+  min-height: 82px;
+}
+
+:root .course-intro-lesson p,
+:root .course-module-head p {
+  color: var(--theme-text-muted);
+  font-size: var(--type-body);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-body);
+}
+
+:root .course-intro-lesson em {
+  color: var(--theme-text-muted);
+  font-size: var(--type-meta);
+  font-weight: var(--weight-meta);
+  line-height: var(--leading-meta);
+}
+
+:root .course-module-head {
+  min-height: 84px;
+}
+
+:root .course-module-lessons.lesson-list button {
+  min-height: 62px;
+}
+
+:root .course-resource-grid p {
+  color: var(--theme-text-muted);
+  font-size: var(--type-body);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-body);
+}
+
+/* Kanban typography stays legible at four columns without becoming oversized. */
+:root .crm-board {
+  scrollbar-gutter: stable;
+  scrollbar-color: rgba(247, 247, 243, 0.18) transparent;
+  scrollbar-width: thin;
+}
+
+:root .crm-board::-webkit-scrollbar {
+  height: 4px;
+}
+
+:root .crm-board::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+:root .crm-board::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(247, 247, 243, 0.16);
+}
+
+@media (max-width: 1360px) {
+  :root .crm-board {
+    grid-template-columns: repeat(4, minmax(220px, 1fr));
+    gap: 12px;
+  }
+}
+
+:root .crm-column-title > span {
+  font-size: var(--type-subsection-title);
+  font-weight: var(--weight-label);
+  line-height: var(--leading-row);
+}
+
+:root .crm-column-title > b {
+  align-self: baseline;
+  font-size: var(--type-subsection-title);
+  font-weight: var(--weight-control);
+  line-height: var(--leading-row);
+}
+
+:root .crm-deal strong {
+  font-size: var(--type-subsection-title);
+  font-weight: var(--weight-label);
+  line-height: var(--leading-subsection);
+}
+
+:root .crm-deal p {
+  line-height: var(--leading-body);
+}
+
+:root .crm-deal em {
+  font-size: var(--type-body);
+  font-weight: var(--weight-label);
+  line-height: var(--leading-body);
+}
+
+:root .crm-deal small {
+  color: var(--theme-text-muted);
+  font-size: var(--type-meta);
+  font-weight: var(--weight-control);
+  line-height: var(--leading-meta);
+}
+
+/* The drawer header and its stage rail share the same inner grid as the right
+   content column. This fixes the right-edge drift of the “Сделка” stage. */
+@media (min-width: 901px) {
+  :root .crm-modal-stagebar {
+    box-sizing: border-box;
+    width: 100%;
+    margin: 0;
+    padding: 0 29px 0 18px;
+  }
+}
+
+:root .crm-modal-stagebar button {
+  min-height: var(--hit-standard);
+  font-size: var(--type-meta);
+  font-weight: var(--weight-label);
+  line-height: var(--leading-caption);
+}
+
+:root .crm-modal .crm-modal-stagebar button span {
+  font-size: var(--type-meta);
+  font-weight: var(--weight-label);
+  line-height: var(--leading-caption);
+}
+
+:root .crm-modal-backdrop {
+  -webkit-backdrop-filter: blur(8px) saturate(0.92);
+  backdrop-filter: blur(8px) saturate(0.92);
+}
+
+:root .crm-edit-field > span {
+  font-size: var(--type-meta);
+  font-weight: var(--weight-control);
+  line-height: var(--leading-caption);
+}
+
+:root :is(.crm-edit-field input, .crm-side-edit input, .crm-note-premium textarea) {
+  font-size: var(--type-body);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-body);
+}
+
+:root .crm-modal .crm-quick-actions-card .crm-modal-actions button {
+  min-height: 64px;
+  font-size: var(--type-meta);
+  font-weight: var(--weight-label);
+  line-height: var(--leading-caption);
+}
+
+:root .crm-modal .crm-quick-actions-card .crm-modal-actions button svg {
+  width: var(--icon-control);
+  height: var(--icon-control);
+  stroke-width: 1.8;
+}
+
+:root .crm-timeline-event strong {
+  font-size: var(--type-body);
+  font-weight: var(--weight-label);
+  line-height: var(--leading-body);
+}
+
+/* Structure and team depth: data reads as a dashboard, not a spreadsheet. */
+
+:root :is(.cabinet-depth-level, .structure-table tbody th) {
+  font-size: var(--type-body);
+  font-weight: var(--weight-label);
+  line-height: var(--leading-body);
+}
+
+:root :is(.cabinet-depth-activity strong, .cabinet-depth-volume strong) {
+  font-size: var(--type-row-title);
+  font-weight: var(--weight-label);
+  line-height: var(--leading-row);
+}
+
+:root .cabinet-depth-activity span {
+  color: var(--theme-text-muted);
+  font-size: var(--type-body);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-body);
+}
+
+/* Wallet and withdrawal: separate financial values from supporting metadata. */
+:root .wallet-period-presets button,
+:root .wallet-history-types button {
+  font-size: var(--type-meta);
+  font-weight: var(--weight-label);
+  line-height: var(--leading-caption);
+}
+
+:root .wallet-date-range :is(label, input),
+:root .wallet-history-period select {
+  min-height: var(--hit-compact);
+  font-size: var(--type-meta);
+  font-weight: var(--weight-control);
+  line-height: var(--leading-meta);
+}
+
+:root .wallet-card strong,
+:root .wallet-payout-card > strong {
+  font-size: var(--type-page-title);
+  font-weight: var(--weight-emphasis);
+  line-height: 1;
+}
+
+:root .wallet-row strong,
+:root .wallet-row b {
+  font-size: var(--type-body);
+  font-weight: var(--weight-label);
+  line-height: var(--leading-body);
+}
+
+:root .portal-main .wallet-panel .wallet-row p {
+  margin-top: 3px;
+  color: var(--theme-text-muted);
+  font-size: var(--type-meta);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-meta);
+}
+
+:root .portal-main .wallet-panel .wallet-row em {
+  color: var(--theme-text-muted);
+  font-size: var(--type-meta);
+  font-weight: var(--weight-control);
+  line-height: var(--leading-caption);
+}
+
+:root .withdraw-dialog .portal-dialog-head h2 {
+  font-size: var(--type-page-title);
+  font-weight: var(--weight-heading);
+  line-height: 1.12;
+}
+
+:root .withdraw-dialog .withdraw-address > small {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+:root .withdraw-dialog .withdraw-remember > div {
+  display: grid;
+  align-items: start;
+  gap: 2px;
+}
+
+:root .withdraw-dialog .withdraw-amount > div {
+  align-items: baseline;
+}
+
+:root .withdraw-dialog .withdraw-amount b {
+  padding-bottom: 0;
+  font-size: var(--type-body);
+  font-weight: var(--weight-control);
+  line-height: var(--leading-body);
+}
+
+:root .withdraw-dialog .withdraw-amount input {
+  font-size: var(--type-card-title);
+  font-weight: var(--weight-control);
+  line-height: 24px;
+}
+
+:root .withdraw-dialog .withdraw-summary div span {
+  overflow: visible;
+  color: var(--theme-text-muted);
+  font-size: var(--type-meta);
+  font-weight: var(--weight-meta);
+  line-height: var(--leading-caption);
+  text-overflow: clip;
+}
+
+:root .withdraw-dialog .withdraw-summary strong {
+  overflow: visible;
+  font-size: var(--type-body);
+  font-weight: var(--weight-label);
+  line-height: 18px;
+  text-overflow: clip;
+}
+
+@media (max-width: 680px) {
+  :root .withdraw-dialog :is(.withdraw-summary, .withdraw-verify-details) {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Recurring secondary copy uses theme tokens instead of ad-hoc low alphas. */
+:root :is(
+  .brand small,
+  .topbar-title > span,
+  .sidebar-card small,
+  .sidebar-card p,
+  .course-module-head p,
+  .course-module-head em,
+  .course-module-lessons.lesson-list small,
+  .course-resource-grid p,
+  .course-resource-grid em,
+  .course-current-step span,
+  .course-current-step small,
+  .course-side-meta span,
+  .crm-deal p,
+  .crm-deal small,
+  .crm-section-heading small,
+  .crm-timeline-event p,
+  .crm-timeline-event time,
+  .labor-project-meta span,
+  .labor-project-card footer span,
+  .labor-skill-list span,
+  .chat-space-card header em,
+  .community-rules > span,
+  .profile-identity small,
+  .profile-identity p,
+  .profile-field span,
+  .profile-status-row span,
+  .profile-status-row p,
+  .profile-list-row span,
+  .profile-link-row span,
+  .wallet-row p,
+  .wallet-row em,
+  .wallet-method small,
+  .wallet-payout-card > p
+) {
+  color: var(--theme-text-muted);
+}
+
+:root :is(input, textarea)::placeholder {
+  color: var(--theme-field-placeholder);
+  opacity: 1;
+}
+
+:root .topbar-section-switch button.active {
+  color: var(--theme-text-primary);
+  font-weight: var(--weight-label);
+}
+
+:root :is(.invite-button, .pro-card button) {
+  font-weight: var(--weight-label);
+}
+
+@media (pointer: coarse) {
+  :root :is(
+    .topbar-section-switch button,
+    .language-menu button,
+    .academy-filters button,
+    .catalog-toolbar > div button,
+    .labor-filter-tabs button,
+    .structure-filter-row button,
+    .wallet-period-presets button,
+    .wallet-history-types button,
+    .notification-popover > div button
+  ) {
+    min-height: var(--hit-standard);
+  }
+}
+
+@media (max-height: 760px) and (min-width: 1081px) {
+  :root .portal-sidebar {
+    overflow-y: auto;
+  }
+
+  :root .side-link {
+    min-height: 34px;
+  }
+}
+
+@media (max-width: 620px) {
+  :root {
+    --type-page-title: 28px;
+    --type-display: 38px;
+  }
+}
+

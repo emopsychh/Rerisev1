@@ -72,7 +72,6 @@ export function PortalBackendProvider({ children }: { children: ReactNode }) {
         tariffData,
         tokenData,
         dashData,
-        structureData,
         invitedData,
         walletData,
         programsData,
@@ -86,7 +85,6 @@ export function PortalBackendProvider({ children }: { children: ReactNode }) {
         fetchTariffs().catch(() => []),
         fetchTokenPacks().catch(() => []),
         fetchPartnerDashboard().catch(() => null),
-        fetchPartnerStructure().catch(() => null),
         fetchInvited().catch(() => null),
         fetchWallet().catch(() => null),
         fetchPrograms().catch(() => null),
@@ -97,6 +95,14 @@ export function PortalBackendProvider({ children }: { children: ReactNode }) {
         fetchNotifications().catch(() => []),
       ]);
       if (requestId !== requestIdRef.current) return;
+
+      const depthLimit = Number(
+        (dashData as { team_depth?: { tariff_depth_limit?: number } } | null)?.team_depth?.tariff_depth_limit ?? 0,
+      );
+      const structureDepth = Math.min(Math.max(depthLimit || 15, 1), 15);
+      const structureData = await fetchPartnerStructure({ depth: structureDepth }).catch(() => null);
+      if (requestId !== requestIdRef.current) return;
+
       setHome(homeData);
       setTariffs(tariffData as Array<Record<string, unknown>>);
       setTokens(tokenData as Array<Record<string, unknown>>);

@@ -218,3 +218,37 @@ class CommerceAPITestCase(TestCase):
         self.assertEqual(listing.data["data"][0]["id"], order_id)
         self.assertIn("product_name", listing.data["data"][0])
         self.assertIn("status_label", listing.data["data"][0])
+
+    def test_token_pack_pays_from_wallet_instantly(self):
+        from decimal import Decimal
+
+        from apps.ibox.tokens import TokenService
+        from apps.ledger.constants import ENTRY_TYPE_ADJUSTMENT
+        from apps.ledger.services import LedgerWriter
+        from apps.wallet.services import WalletUpdater
+
+        LedgerWriter.credit(
+            self.user,
+            ENTRY_TYPE_ADJUSTMENT,
+            Decimal("50.00"),
+            description="Тестовое пополнение",
+            idempotency_key="test-wallet-topup-tokens",
+        )
+        WalletUpdater.refresh(self.user)
+
+        before_tokens = TokenService.get_available(self.user)
+        self.client.credentials(**self.auth)
+        response = self.client.post(
+            "/api/v1/store/orders",
+            {"product_id": "tokens-1000", "order_type": "purchase"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = response.data["data"]
+        self.assertEqual(data["status"], "paid")
+        self.assertEqual(data["payment"]["provider"], "wallet")
+        self.assertIsNone(data["payment"]["payment_url"])
+        self.assertEqual(TokenService.get_available(self.user), before_tokens + 1000)
+
+        balance = WalletUpdater.refresh(self.user)
+        self.assertEqual(balance.available_usd, Decimal("40.00"))

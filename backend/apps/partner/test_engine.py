@@ -341,3 +341,18 @@ class PartnerDashboardApiTests(BonusEngineTestMixin, TestCase):
         self.assertEqual(structure.status_code, 200)
         self.assertEqual(len(structure.data["data"]["legs"]), 2)
         self.assertEqual(structure.data["data"]["summary"]["personal_invites"], 1)
+
+        tree = structure.data["data"]["tree"]
+        self.assertEqual(tree["root_id"], "self")
+        directory = tree["directory"]
+        self.assertIn("self", directory)
+        self.assertEqual(directory["self"]["id"], "self")
+        children = directory["self"]["children"]
+        self.assertEqual(len(children), 2)
+        child_ids = [item for item in children if item]
+        self.assertEqual(len(child_ids), 1)
+        child = directory[child_ids[0]]
+        self.assertEqual(child["parentId"], "self")
+        self.assertIn(child["branchId"], ("left", "right"))
+        self.assertEqual(child["level"], "L1")
+        self.assertTrue(any(member.get("id") == child_ids[0] for member in structure.data["data"]["members"]))

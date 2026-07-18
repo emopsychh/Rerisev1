@@ -25,13 +25,7 @@ import {
   Workflow,
 } from "lucide-react";
 import { PARTNER_TIERS, QUICK_START_RULES } from "../marketing-plan";
-import type { CourseModuleItem, CrmColumn, Lang, SectionId, TeamPartnerNode } from "./types";
-
-export const languages: Array<{ id: Lang; label: string }> = [
-  { id: "ru", label: "RU" },
-  { id: "en", label: "EN" },
-  { id: "es", label: "ES" },
-];
+import type { CourseModuleItem, CrmColumn, SectionId, TeamPartnerNode } from "./types";
 
 export const navItems: Array<{ id: SectionId; label: string; icon: typeof Home }> = [
   { id: "home", label: "Главная", icon: Home },
@@ -211,10 +205,16 @@ export const marketProgramCourseMap: Record<string, string> = {
 
 export const tokenPacks = [
   {
-    title: "Токены AI Hub",
-    text: "Дополнительное пополнение баланса AI Hub. Номиналы, цены и участие в маркетинг-плане находятся в проработке.",
-    price: "Условия уточняются",
-    pv: "PV не утверждён",
+    title: "1000 токенов",
+    text: "1000 токенов AI Hub · 100 ток./$1",
+    price: "$10",
+    pv: "без PV",
+  },
+  {
+    title: "5000 токенов",
+    text: "5000 токенов AI Hub · 125 ток./$1",
+    price: "$40",
+    pv: "без PV",
   },
 ];
 

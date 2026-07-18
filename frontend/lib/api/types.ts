@@ -38,6 +38,7 @@ export type MeUser = {
   last_name: string;
   avatar_url: string;
   language: string;
+  referral_code?: string;
   is_partner: boolean;
   subscription: Record<string, unknown> | null;
   unread_notifications: number;

@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 import { Copy, MessageSquareText, QrCode, Send } from "lucide-react";
 import { fetchInviteLink } from "../../../lib/api/me";
 import { useAuth } from "../../../lib/auth/AuthProvider";
+import { inviteUrlFromReferralCode } from "../../../lib/portal/referral";
 import type { NotifyFn, TFn } from "../../../lib/portal/types";
 import { PortalDialog } from "../shared/PortalDialog";
 
 export function InviteDialog({ onClose, notify, t }: { onClose: () => void; notify: NotifyFn; t: TFn }) {
   const { user } = useAuth();
-  const fallback = user?.public_id ? `rerise.app/join/${user.public_id}` : "rerise.app";
+  const fallback = inviteUrlFromReferralCode(user?.referral_code) || "—";
   const [inviteLink, setInviteLink] = useState(fallback);
   const inviteMessage = "Привет! Приглашаю тебя в RE:RISE — платформу с AI-инструментами, практическим обучением и готовыми рабочими сценариями. Посмотри возможности по моей ссылке:";
 

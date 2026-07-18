@@ -67,6 +67,7 @@ class MeSerializer(serializers.ModelSerializer):
     last_name = serializers.CharField(source="profile.last_name", read_only=True)
     avatar_url = serializers.URLField(source="profile.avatar_url", read_only=True)
     language = serializers.CharField(source="profile.language", read_only=True)
+    referral_code = serializers.SerializerMethodField()
     is_partner = serializers.SerializerMethodField()
     subscription = serializers.SerializerMethodField()
     unread_notifications = serializers.SerializerMethodField()
@@ -82,10 +83,15 @@ class MeSerializer(serializers.ModelSerializer):
             "last_name",
             "avatar_url",
             "language",
+            "referral_code",
             "is_partner",
             "subscription",
             "unread_notifications",
         )
+
+    def get_referral_code(self, obj: User) -> str:
+        code = getattr(obj, "referral_code", None)
+        return code.code if code else ""
 
     def get_is_partner(self, obj: User) -> bool:
         return user_is_partner(obj)

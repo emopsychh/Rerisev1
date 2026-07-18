@@ -44,6 +44,10 @@ class OrderService:
             previous_tariff_id=previous_tariff_id,
         )
 
+        # AI-токены: при достаточном балансе кошелька — мгновенный обмен USD → токены.
+        if product.type == Product.TYPE_TOKENS and OrderService._wallet_can_cover(user, order.amount_usd):
+            return OrderService._pay_with_wallet(user, order)
+
         provider = get_payment_provider()
         intent = provider.create_invoice(
             order=order,
@@ -62,6 +66,57 @@ class OrderService:
             instructions=intent.instructions,
             expires_at=intent.expires_at,
         )
+        return get_order_for_user(order.id, user.id)
+
+    @staticmethod
+    def _wallet_can_cover(user: User, amount) -> bool:
+        from apps.wallet.services import WalletUpdater
+
+        balance = WalletUpdater.refresh(user)
+        return balance.available_usd >= amount
+
+    @staticmethod
+    def _pay_with_wallet(user: User, order: Order) -> Order:
+        from decimal import Decimal
+
+        from apps.ledger.constants import ENTRY_TYPE_STORE_PURCHASE
+        from apps.ledger.services import LedgerWriter
+        from apps.wallet.services import WalletUpdater
+
+        balance = WalletUpdater.refresh(user)
+        amount = Decimal(str(order.amount_usd))
+        if balance.available_usd < amount:
+            raise OrderValidationError(
+                f"Недостаточно средств на балансе: нужно ${amount}, доступно ${balance.available_usd}"
+            )
+
+        payment = Payment.objects.create(
+            order=order,
+            provider="wallet",
+            external_id=f"wallet-{order.pk}",
+            amount_usd=amount,
+            status=Payment.STATUS_PAID,
+            payment_url=None,
+            instructions="Оплачено с баланса кошелька",
+            paid_at=timezone.now(),
+        )
+
+        LedgerWriter.debit(
+            user,
+            ENTRY_TYPE_STORE_PURCHASE,
+            amount,
+            source=order,
+            metadata={
+                "product_slug": order.product.slug,
+                "product_name": order.product.name,
+                "payment_id": payment.pk,
+            },
+            idempotency_key=f"store-purchase:{order.pk}",
+            description=f"Покупка: {order.product.name}",
+        )
+        WalletUpdater.refresh(user)
+
+        OrderFulfillmentService.fulfill(order)
         return get_order_for_user(order.id, user.id)
 
     @staticmethod

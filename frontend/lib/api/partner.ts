@@ -1,4 +1,5 @@
 import { apiRequest } from "./client";
+import type { PartnerStructurePayload } from "./partner-types";
 
 export async function fetchPartnerDashboard() {
   return apiRequest<Record<string, unknown>>("/partner/dashboard");
@@ -13,7 +14,7 @@ export async function fetchPartnerStructure(params?: { leg?: string; depth?: num
   if (params?.leg) q.set("leg", params.leg);
   if (params?.depth) q.set("depth", String(params.depth));
   const suffix = q.toString() ? `?${q}` : "";
-  return apiRequest(`/partner/structure${suffix}`);
+  return apiRequest<PartnerStructurePayload>(`/partner/structure${suffix}`);
 }
 
 export async function fetchInvited() {

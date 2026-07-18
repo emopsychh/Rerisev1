@@ -6,7 +6,7 @@ import { Check, CheckCircle2, ChevronRight, ShieldCheck, Sparkles, Zap } from "l
 import { usePortalBackend } from "../../../lib/auth/PortalBackendProvider";
 import { createOrder } from "../../../lib/api/store";
 import { ApiError } from "../../../lib/api/types";
-import { marketOfferFromPathname, marketOfferHref } from "../../../lib/portal";
+import { marketOfferFromPathname, marketOfferHref, routeSlug } from "../../../lib/portal";
 import type { MarketOffer, MarketTab, NotifyFn, TFn } from "../../../lib/portal";
 import { PageShell } from "../shared/PageShell";
 import { PortalDialog } from "../shared/PortalDialog";
@@ -35,31 +35,56 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
       eyebrow: "RE:RISE",
       note: included[0] || String(item.quick_start || `${purchasePv} PV`),
       features: [
-        `PV cap ${purchasePv}`,
-        `Binary depth ${binaryDepth}`,
-        `Matching lines ${matchingLines}`,
+        `Лимит PV: ${purchasePv}`,
+        `Глубина бинара: ${binaryDepth}`,
+        `Линий матчинга: ${matchingLines}`,
         ...included.slice(1),
       ],
       highlight: String(item.id).includes("pro") && !String(item.id).includes("max"),
     };
   });
 
-  const apiTokens = tokens.map((item) => ({
-    title: String(item.name || `${item.amount} tokens`),
-    productId: String(item.id),
-    price: `$${Number(item.price_usd || 0)}`,
-    amount: Number(item.amount || 0),
-    text: `${item.amount} tokens`,
-    pv: "0 PV",
-  }));
+  const apiTokens = tokens.map((item) => {
+    const amount = Number(item.amount || 0);
+    const priceUsd = Number(item.price_usd || 0);
+    const tokensPerUsd = Number(
+      item.tokens_per_usd
+      ?? (priceUsd > 0 ? Math.round(amount / priceUsd) : 0),
+    );
+    return {
+      title: String(item.name || `${amount.toLocaleString("ru-RU")} токенов`),
+      productId: String(item.id),
+      price: `$${priceUsd}`,
+      priceUsd,
+      amount,
+      tokensPerUsd,
+      text: `${amount.toLocaleString("ru-RU")} токенов · ${tokensPerUsd} ток./$1`,
+      pv: "без PV",
+      features: [
+        `${amount.toLocaleString("ru-RU")} AI-токенов на баланс`,
+        `Курс пакета: ${tokensPerUsd} токенов за $1`,
+        "Используются только в AI Hub",
+        "Не участвуют в PV, бинаре и партнёрских начислениях",
+      ],
+    };
+  });
+  const bestTokenRate = apiTokens.reduce(
+    (best, pack) => Math.max(best, pack.tokensPerUsd),
+    0,
+  );
 
   const placeOrder = async (productId: string, orderType = "purchase") => {
     setOrdering(true);
     try {
       const order = await createOrder(productId, orderType);
-      notify(t(`Заказ #${order.order_id} создан (${order.status})`));
-      if (order.payment?.payment_url) {
-        window.open(order.payment.payment_url, "_blank", "noopener,noreferrer");
+      const paidFromWallet = order.status === "paid" && (!order.payment?.payment_url || order.payment?.provider === "wallet");
+      if (paidFromWallet) {
+        notify(t(`Токены зачислены · заказ #${order.order_id}`));
+      } else {
+        notify(t(`Заказ #${order.order_id} создан (${order.status})`));
+        if (order.payment?.payment_url) {
+          window.open(order.payment.payment_url, "_blank", "noopener,noreferrer");
+        }
       }
       await reload();
       setPurchaseStep("ready");
@@ -84,9 +109,32 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
   };
 
   useEffect(() => {
+    const match = pathname.match(/^\/market\/(programs|packages|tokens)\/([^/]+)$/);
+    if (!match) {
+      setSelectedOffer(null);
+      setPurchaseStep("details");
+      return;
+    }
+    const [, group, slug] = match;
+    if (group === "tokens") {
+      const pack = apiTokens.find((item) => routeSlug(item.title) === slug || routeSlug(item.productId) === slug);
+      if (pack) {
+        setSelectedOffer({
+          kind: "tokens",
+          title: pack.title,
+          price: pack.price,
+          pv: pack.pv,
+          text: pack.text,
+          features: pack.features,
+          productId: pack.productId,
+        });
+        setPurchaseStep("details");
+      }
+      return;
+    }
     setSelectedOffer(marketOfferFromPathname(pathname));
     setPurchaseStep("details");
-  }, [pathname]);
+  }, [pathname, tokens]);
 
   if (!ready) {
     return (
@@ -156,7 +204,7 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
             <div>
               <span>{t("AI Hub · RE:RISE")}</span>
               <h2>{t("Токены и использование")}</h2>
-              <p>{t("Баланс, активность и статус пополнения — без смешивания с тарифами и партнёрскими начислениями.")}</p>
+              <p>{t("Покупка AI-токенов для работы в AI Hub. Курс зависит от пакета — чем больше номинал, тем выгоднее.")}</p>
             </div>
           </header>
           <section className="token-overview">
@@ -166,31 +214,60 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
               <p>{t("Токены используются внутри AI Hub и не участвуют в PV, бинаре или партнёрских начислениях.")}</p>
             </article>
             <div className="token-overview-metrics">
-              <div><strong>348</strong><span>{t("генераций за месяц")}</span></div>
-              <div><strong>4,6</strong><span>{t("средний расход на запрос")}</span></div>
-              <div><strong>AI Hub</strong><span>{t("единственная зона использования")}</span></div>
+              <div>
+                <strong>{apiTokens[0]?.tokensPerUsd?.toLocaleString("ru-RU") || "—"}</strong>
+                <span>{t("токенов за $1 · базовый пакет")}</span>
+              </div>
+              <div>
+                <strong>{bestTokenRate ? bestTokenRate.toLocaleString("ru-RU") : "—"}</strong>
+                <span>{t("токенов за $1 · лучший пакет")}</span>
+              </div>
+              <div>
+                <strong>0 PV</strong>
+                <span>{t("покупка токенов не даёт PV")}</span>
+              </div>
             </div>
           </section>
 
           <section className="token-availability-card">
+            {apiTokens.length === 0 ? (
+              <article>
+                <span className="token-availability-icon"><Zap size={22} /></span>
+                <div>
+                  <em>{t("Каталог")}</em>
+                  <h3>{t("Пакеты токенов пока недоступны")}</h3>
+                  <p>{t("Когда администратор добавит пакеты в store, они появятся здесь.")}</p>
+                </div>
+              </article>
+            ) : null}
             {apiTokens.map((item) => (
-              <article key={item.title}>
+              <article key={item.productId}>
                 <span className="token-availability-icon"><Zap size={22} /></span>
                 <div>
                   <em>{t("Пополнение")}</em>
-                  <h3>{t("Покупка токенов готовится к запуску")}</h3>
-                  <p>{t("Номиналы, стоимость и правила списания появятся здесь после утверждения продуктовой модели.")}</p>
+                  <h3>{item.title}</h3>
+                  <p>
+                    {item.amount.toLocaleString("ru-RU")} {t("токенов")} · {item.price}
+                    {" · "}
+                    {item.tokensPerUsd.toLocaleString("ru-RU")} {t("токенов за $1")}
+                  </p>
                 </div>
                 <div className="token-availability-action">
-                  <span>{t("Сейчас доступен просмотр баланса")}</span>
-                  <button onClick={() => openOffer({
-                    kind: "tokens",
-                    title: item.title,
-                    price: item.price,
-                    pv: item.pv,
-                    text: item.text,
-                    features: ["Номиналы, способы использования и правила списания находятся в проработке"],
-                  })}>{t("Подробнее")}</button>
+                  <span>{item.price}</span>
+                  <button
+                    disabled={ordering}
+                    onClick={() => openOffer({
+                      kind: "tokens",
+                      title: item.title,
+                      price: item.price,
+                      pv: item.pv,
+                      text: item.text,
+                      features: item.features,
+                      productId: item.productId,
+                    })}
+                  >
+                    {t("Купить")}
+                  </button>
                 </div>
               </article>
             ))}
@@ -223,10 +300,10 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
               <div className="marketing-plan-notice">
                 <ShieldCheck size={17} />
                 <p>{selectedOffer.kind === "package"
-                  ? t("Показаны только утверждённые параметры маркетинг-плана. Продуктовый состав и способы оплаты будут добавлены после отдельного решения.")
+                  ? t("Показаны утверждённые параметры маркетинг-плана. После оплаты заказ подтверждается провайдером платежей.")
                   : selectedOffer.kind === "program"
                     ? t("Цена, PV, состав доступа и способ оплаты программы пока не утверждены.")
-                    : t("Номиналы, цены, PV и способы оплаты токенов пока не утверждены.")}</p>
+                    : t("Пакеты токенов: при достаточном балансе кошелька USD списываются сразу и токены начисляются мгновенно. Иначе создаётся внешний платёж. PV не начисляется.")}</p>
               </div>
               <footer className="portal-dialog-actions">
                 <button onClick={closeOffer}>{t("Отмена")}</button>
@@ -254,12 +331,12 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
               <span><CheckCircle2 size={34} /></span>
               <h3>{t(selectedOffer.title)}</h3>
               <p>{selectedOffer.kind === "package"
-                ? t("Тариф выбран. Финальный способ оплаты появится после подключения платёжного сценария.")
+                ? t("Заказ тарифа создан. Оплатите счёт, чтобы активировать доступ.")
                 : selectedOffer.kind === "program"
                   ? t("Мы сообщим, когда будут утверждены цена, состав доступа и способ оплаты программы.")
-                  : t("Мы сообщим, когда будут утверждены номиналы, цены и правила токенов.")}</p>
-              <div><span>{t("Статус")}</span><strong>{selectedOffer.kind === "package" ? t("Тариф выбран") : t("Условия в проработке")}</strong></div>
-              {selectedOffer.kind === "package" ? <div><span>{t("Стоимость")}</span><strong>{selectedOffer.price}</strong></div> : null}
+                  : t("Если на кошельке хватало USD — токены уже на балансе AI Hub. Иначе оплатите внешний счёт.")}</p>
+              <div><span>{t("Статус")}</span><strong>{selectedOffer.kind === "program" ? t("Условия в проработке") : t("Заказ обработан")}</strong></div>
+              {selectedOffer.kind === "package" || selectedOffer.kind === "tokens" ? <div><span>{t("Стоимость")}</span><strong>{selectedOffer.price}</strong></div> : null}
               <button onClick={closeOffer}>{t("Готово")}</button>
             </div>
           )}

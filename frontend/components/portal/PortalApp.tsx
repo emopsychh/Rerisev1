@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "../../lib/auth/AuthProvider";
 import { usePortalBackend } from "../../lib/auth/PortalBackendProvider";
@@ -13,11 +13,12 @@ import {
   sectionFromPathname,
   sectionHref,
   sectionIds,
-  translate,
 } from "../../lib/portal";
-import type { DetailView, Lang, MarketTab, NotifyFn, SectionId, TFn } from "../../lib/portal";
+import type { DetailView, MarketTab, NotifyFn, SectionId, TFn } from "../../lib/portal";
 import { PortalLoading } from "./shared/PortalLoading";
 import { PortalShellInner } from "./PortalShell";
+
+const t: TFn = (value) => value;
 
 export function PortalAppContent() {
   const router = useRouter();
@@ -35,8 +36,6 @@ export function PortalAppContent() {
     return "home";
   });
   const [detail, setDetail] = useState<DetailView | null>(null);
-  const [lang, setLang] = useState<Lang>("ru");
-  const [isLangOpen, setIsLangOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [isRenewalOpen, setIsRenewalOpen] = useState(false);
@@ -45,11 +44,9 @@ export function PortalAppContent() {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
   const [marketTab, setMarketTab] = useState<MarketTab>(() => marketTabFromPathname(pathname) ?? "packages");
-  const languageSwitcherRef = useRef<HTMLDivElement | null>(null);
-  const t = useMemo<TFn>(() => (value: string) => translate(value, lang), [lang]);
   const title = useMemo(
     () => (detail ? t(detail.type === "course" ? (detail.title || detail.slug) : detail.title) : pageTitle(active, t)),
-    [active, detail, t],
+    [active, detail],
   );
   const openCourse = (courseSlug: string, returnTo: SectionId, courseTitle?: string) => {
     setDetail({ type: "course", slug: courseSlug, title: courseTitle, returnTo });
@@ -169,35 +166,11 @@ export function PortalAppContent() {
     return () => window.clearTimeout(timer);
   }, [toast]);
 
-  useEffect(() => {
-    if (!isLangOpen) return;
-
-    const closeOnOutsidePress = (event: PointerEvent) => {
-      if (event.target instanceof Node && !languageSwitcherRef.current?.contains(event.target)) {
-        setIsLangOpen(false);
-      }
-    };
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setIsLangOpen(false);
-      }
-    };
-
-    document.addEventListener("pointerdown", closeOnOutsidePress);
-    document.addEventListener("keydown", closeOnEscape);
-
-    return () => {
-      document.removeEventListener("pointerdown", closeOnOutsidePress);
-      document.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [isLangOpen]);
-
   const goSection = (section: SectionId) => {
     setDetail(null);
     setActive(section);
     setIsMobileMoreOpen(false);
     setIsNotificationsOpen(false);
-    setIsLangOpen(false);
     router.push(sectionHref(section), { scroll: false });
   };
   const goMarketTab = (tab: MarketTab) => {
@@ -206,7 +179,6 @@ export function PortalAppContent() {
     setMarketTab(tab);
     setIsMobileMoreOpen(false);
     setIsNotificationsOpen(false);
-    setIsLangOpen(false);
     router.push(`/market/${tab}`, { scroll: false });
   };
   const goHomeFromBrand = () => {
@@ -214,7 +186,6 @@ export function PortalAppContent() {
     setActive("home");
     setIsMobileMoreOpen(false);
     setIsNotificationsOpen(false);
-    setIsLangOpen(false);
     setIsInviteOpen(false);
     setIsRenewalOpen(false);
     setIsRanksOpen(false);
@@ -275,11 +246,6 @@ export function PortalAppContent() {
       setIsNotificationsOpen={setIsNotificationsOpen}
       notificationCount={user.unread_notifications ?? notificationCount}
       setNotificationCount={setNotificationCount}
-      lang={lang}
-      setLang={setLang}
-      isLangOpen={isLangOpen}
-      setIsLangOpen={setIsLangOpen}
-      languageSwitcherRef={languageSwitcherRef}
       logout={logout}
       user={user}
     />

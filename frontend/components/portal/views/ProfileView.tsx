@@ -9,6 +9,7 @@ import { fetchInviteLink, fetchProfile, updateNotificationSettings, updateProfil
 import { fetchOrders } from "../../../lib/api/store";
 import { ApiError } from "../../../lib/api/types";
 import { formatApiDate, describeCurrentDevice, formatUsd, maskWalletAddress, PAYOUT_ADDRESS_STORAGE_KEY, tariffDisplayName } from "../../../lib/portal";
+import { inviteUrlFromReferralCode } from "../../../lib/portal/referral";
 import type { NotifyFn, SectionId, TFn } from "../../../lib/portal";
 import { PageShell } from "../shared/PageShell";
 import { PortalDialog } from "../shared/PortalDialog";
@@ -43,7 +44,7 @@ export function ProfileView({ t, notify, setActive, onRenew }: { t: TFn; notify:
   const activityUntil = formatApiDate(partnerFromDash?.activity_until, "—");
   const isActive = partnerFromHome?.is_active ?? partnerFromDash?.is_active ?? false;
   const currentDevice = describeCurrentDevice();
-  const [inviteUrl, setInviteUrl] = useState(user?.public_id ? `rerise.app/join/${user.public_id}` : "rerise.app");
+  const [inviteUrl, setInviteUrl] = useState(() => inviteUrlFromReferralCode(user?.referral_code) || "—");
   const [purchases, setPurchases] = useState<PurchaseRow[]>([]);
   const [purchasesLoading, setPurchasesLoading] = useState(true);
   const [profileData, setProfileData] = useState({
@@ -127,7 +128,7 @@ export function ProfileView({ t, notify, setActive, onRenew }: { t: TFn; notify:
         const invite = await fetchInviteLink();
         if (invite.invite_url) setInviteUrl(invite.invite_url);
       } catch {
-        setInviteUrl(user.public_id ? `rerise.app/join/${user.public_id}` : "rerise.app");
+        setInviteUrl(inviteUrlFromReferralCode(user.referral_code) || "—");
       }
     })();
   }, [user]);

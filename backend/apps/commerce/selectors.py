@@ -146,8 +146,14 @@ def serialize_token_store(balance: int = 0) -> dict:
         "packs": [
             {
                 "id": pack.slug,
-                "amount": pack.metadata.get("amount", 0),
+                "name": pack.name,
+                "amount": int((pack.metadata or {}).get("amount") or 0),
                 "price_usd": float(pack.price_usd),
+                "tokens_per_usd": (
+                    round(int((pack.metadata or {}).get("amount") or 0) / float(pack.price_usd))
+                    if pack.price_usd and float(pack.price_usd) > 0
+                    else 0
+                ),
             }
             for pack in packs
         ],
@@ -165,6 +171,7 @@ def serialize_create_order_response(order: Order) -> dict:
             "provider": payment.provider,
             "payment_url": payment.payment_url,
             "instructions": payment.instructions,
+            "status": payment.status,
             "expires_at": payment.expires_at,
         },
     }

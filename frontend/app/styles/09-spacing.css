@@ -1,0 +1,552 @@
+/* --------------------------------------------------------------------------
+   RE:RISE spacing system
+
+   Page rhythm now has one owner. The fixed topbar provides the page offset;
+   individual views no longer add a second compensating margin underneath it.
+   -------------------------------------------------------------------------- */
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --page-stack-gap: var(--space-5);
+  --topbar-flow-gap: var(--space-4);
+}
+
+:root :is(.page-shell, .product-home, .command-center, .marketplace-packages-page) {
+  margin-top: 0;
+}
+
+:root :is(.page-shell, .product-home) {
+  gap: var(--page-stack-gap);
+}
+
+:root :is(.materials-toolbar, .course-grid.full) {
+  margin-top: 0;
+}
+
+:root .home-program-toolbar {
+  margin-bottom: 0;
+}
+
+:root .academy-head {
+  margin-bottom: 0;
+}
+
+/* Page-level groups use a stable 20px cadence; compact relationships stay on
+   the 8/12/16px steps rather than one-off values. */
+:root .news-feed,
+:root .partner-package-grid {
+  gap: var(--space-5);
+}
+
+:root .community-intro {
+  gap: var(--space-6);
+}
+
+:root .community-rules {
+  gap: var(--space-2) var(--space-5);
+  padding-top: var(--space-5);
+}
+
+:root .labor-project-card h2 {
+  margin: var(--space-5) 0 var(--space-2);
+}
+
+:root .labor-project-meta {
+  margin-top: var(--space-4);
+}
+
+:root .labor-skill-list {
+  margin-top: var(--space-3);
+}
+
+:root .labor-project-card footer button {
+  gap: var(--space-2);
+}
+
+:root .token-overview {
+  gap: var(--space-4);
+}
+
+/* Large panels retain breathing room, but share three deliberate padding
+   roles: 20px regular, 24px prominent, 28px hero. */
+:root :is(.structure-kpi-card, .wallet-card, .wallet-panel, .profile-panel) {
+  padding: var(--space-5);
+}
+
+:root .profile-hero-card {
+  gap: var(--space-5);
+  padding: var(--space-6);
+}
+
+:root :is(.materials-hero, .structure-hero-card, .wallet-hero) {
+  padding: var(--space-7);
+}
+
+:root .wallet-card {
+  gap: var(--space-3);
+}
+
+:root .cabinet-panel {
+  gap: var(--space-4);
+}
+
+:root :is(.wallet-panel-head, .profile-panel-head) {
+  margin-bottom: var(--space-4);
+}
+
+:root :is(.wallet-row, .wallet-method, .profile-list-row, .profile-link-row) {
+  padding-block: 14px;
+}
+
+:root .profile-field {
+  gap: var(--space-2);
+}
+
+:root .profile-status-row {
+  gap: var(--space-2);
+  padding-block: var(--space-4);
+}
+
+/* Long-form detail screens are spacious without drifting onto 13/17/18/30px
+   values that break the rhythm beside ordinary cards. */
+:root .detail-hero {
+  gap: var(--space-6);
+  padding: var(--space-7);
+}
+
+:root .course-module-head {
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+}
+
+:root .course-module-lessons {
+  gap: var(--space-2);
+  padding: var(--space-2);
+}
+
+:root .course-resources-card {
+  gap: var(--space-4);
+}
+
+/* Controls keep their 40/44px hit areas; only the horizontal rhythm is
+   normalized. */
+:root .topbar-section-switch button {
+  padding-inline: var(--space-4);
+}
+
+:root :is(.catalog-toolbar > div button, .labor-filter-tabs button, .structure-filter-row button) {
+  padding-inline: var(--space-3);
+}
+
+@media (min-width: 621px) {
+  :root .portal-dialog-backdrop,
+  :root .mobile-more-backdrop {
+    padding: var(--space-6);
+  }
+}
+
+:root .portal-dialog:not(.withdraw-dialog) .portal-dialog-head {
+  margin-bottom: var(--space-5);
+}
+
+:root .portal-dialog:not(.withdraw-dialog) .portal-dialog-actions {
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+}
+
+:root .invite-side > p {
+  margin-top: 0;
+}
+
+@media (min-width: 1081px) {
+  :root {
+    --topbar-fixed-height: 72px;
+    --topbar-content-gap: var(--space-5);
+  }
+
+  :root .portal-main {
+    padding-top: calc(var(--sidebar-gutter) + var(--topbar-fixed-height) + var(--topbar-content-gap));
+  }
+
+  :root .portal-main.crm-main {
+    padding-top: calc(var(--topbar-fixed-height) + var(--topbar-content-gap));
+  }
+
+  /* Packages do not share CRM's outer margin on shorter displays. Keeping the
+     formula separate prevents the page from jumping between viewport heights. */
+  :root .portal-main:has(.marketplace-packages-page) {
+    padding-top: calc(var(--sidebar-gutter) + var(--topbar-fixed-height) + var(--topbar-content-gap));
+  }
+
+  :root :is(.portal-topbar, .crm-main .portal-topbar) {
+    height: var(--topbar-fixed-height);
+    min-height: var(--topbar-fixed-height);
+  }
+}
+
+@media (min-width: 1181px) and (min-height: 800px) {
+  :root .portal-main:has(.marketplace-packages-page) {
+    padding-top: calc(var(--topbar-fixed-height) + var(--topbar-content-gap));
+  }
+}
+
+@media (max-width: 1080px) {
+  :root {
+    --page-stack-gap: var(--space-4);
+  }
+
+  :root .portal-shell {
+    padding-bottom: 0;
+  }
+
+  :root .portal-main {
+    padding-bottom: calc(92px + env(safe-area-inset-bottom));
+  }
+
+  :root .portal-topbar {
+    margin-bottom: var(--topbar-flow-gap);
+  }
+}
+
+@media (max-width: 620px) {
+  :root {
+    --type-topbar-title: 18px;
+  }
+
+  :root .portal-main {
+    padding-inline: var(--space-3);
+  }
+
+  :root .portal-topbar {
+    margin-bottom: var(--space-3);
+  }
+}
+
+/* Home program names use one consistent uppercase rhythm. The longest title
+   scales against its own card width, so it stays on one line without entering
+   the icon's glass tile or changing the height of its row. */
+:root .product-home .course-card {
+  container-type: inline-size;
+}
+
+:root .product-home .course-overlay h3 {
+  text-transform: uppercase;
+}
+
+:root .product-home .course-overlay h3.course-title-single-line {
+  max-width: calc(100% - 66px);
+  font-size: min(var(--type-section-title), 5.15cqi);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+@container (max-width: 340px) {
+  :root .product-home .program-single-line-title .course-visual {
+    width: 60px;
+    height: 60px;
+  }
+
+  :root .product-home .program-single-line-title .course-icon {
+    width: 58px;
+    height: 58px;
+    border-radius: 21px;
+  }
+
+  :root .product-home .program-single-line-title .course-icon svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  :root .product-home .course-overlay h3.course-title-single-line {
+    max-width: calc(100% - 53px);
+  }
+}
+
+/* The wordmark is brand artwork rather than interface copy, so it keeps a
+   firmer weight than the calmer portal typography. */
+:root .brand-cube span,
+:root[data-theme="light"] .brand-cube span {
+  font-weight: 900;
+}
+
+:root .brand strong {
+  font-weight: 900;
+}
+
+:root .portal-sidebar .brand small {
+  color: rgba(247, 247, 243, 0.5);
+  font-weight: 800;
+}
+
+:root[data-theme="light"] .portal-sidebar .brand small {
+  color: #46585c;
+}
+
+/* Premium sidebar: navigation remains explicit, but active and hover states
+   read as layers of glass instead of large solid buttons. */
+:root .portal-sidebar {
+  isolation: isolate;
+  border-color: rgba(143, 214, 223, 0.115);
+  background:
+    radial-gradient(ellipse 88% 34% at 4% 0%, rgba(76, 166, 255, 0.105), transparent 72%),
+    radial-gradient(ellipse 92% 34% at 100% 100%, rgba(87, 220, 198, 0.045), transparent 74%),
+    linear-gradient(154deg, rgba(23, 29, 32, 0.965), rgba(11, 16, 18, 0.975) 56%, rgba(8, 12, 14, 0.985));
+  box-shadow:
+    0 28px 78px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.075),
+    inset 0 -1px 0 rgba(143, 214, 223, 0.025);
+  backdrop-filter: blur(28px) saturate(1.18);
+}
+
+:root .portal-sidebar::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent) 18% 0 / 42% 1px no-repeat,
+    linear-gradient(180deg, transparent, rgba(143, 214, 223, 0.12), transparent) 100% 18% / 1px 28% no-repeat,
+    radial-gradient(230px 76px at 18% 0%, rgba(255, 255, 255, 0.055), transparent 76%);
+  content: "";
+  opacity: 0.74;
+  pointer-events: none;
+}
+
+:root .portal-sidebar > * {
+  position: relative;
+  z-index: 1;
+}
+
+:root button.brand {
+  padding: 1px 2px;
+}
+
+:root button.brand:hover .brand-cube {
+  filter: brightness(1.1) saturate(1.06);
+  transform: translateY(-1px) rotate(-1deg);
+}
+
+:root .side-nav {
+  gap: 2px;
+}
+
+:root .side-link {
+  position: relative;
+  min-height: 36px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: transparent;
+  color: rgba(247, 247, 243, 0.55);
+  box-shadow: none;
+  transform: none;
+}
+
+:root .side-link::before {
+  position: absolute;
+  top: 50%;
+  left: -1px;
+  width: 2px;
+  height: 8px;
+  border-radius: 0 999px 999px 0;
+  background: linear-gradient(180deg, #75d7dc, #55a8ff);
+  box-shadow: 0 0 10px rgba(85, 168, 255, 0.3);
+  content: "";
+  opacity: 0;
+  transform: translateY(-50%) scaleY(0.45);
+  transition: height 170ms ease, opacity 170ms ease, transform 170ms ease;
+}
+
+:root .side-link > svg {
+  color: rgba(220, 233, 234, 0.52);
+  transition: color 160ms ease, filter 160ms ease, transform 160ms ease;
+}
+
+:root .side-link:hover {
+  border-color: rgba(255, 255, 255, 0.045);
+  background: linear-gradient(90deg, rgba(143, 214, 223, 0.052), rgba(255, 255, 255, 0.018) 62%, transparent);
+  color: rgba(247, 247, 243, 0.82);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+  transform: translateX(1px);
+}
+
+:root .side-link:hover::before {
+  opacity: 0.42;
+  transform: translateY(-50%) scaleY(0.78);
+}
+
+:root .side-link:hover > svg {
+  color: rgba(143, 214, 223, 0.82);
+  transform: translateX(1px);
+}
+
+:root .side-link.active,
+:root .side-link.active:hover {
+  min-height: 36px;
+  border-color: rgba(143, 214, 223, 0.13);
+  background:
+    linear-gradient(92deg, rgba(76, 166, 255, 0.105), rgba(143, 214, 223, 0.05) 54%, rgba(255, 255, 255, 0.027)),
+    rgba(255, 255, 255, 0.022);
+  color: rgba(248, 250, 248, 0.94);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.085),
+    0 10px 28px rgba(0, 0, 0, 0.09);
+  transform: none;
+}
+
+:root .side-link.active::before,
+:root .side-link.active:hover::before {
+  height: 17px;
+  opacity: 0.9;
+  transform: translateY(-50%) scaleY(1);
+}
+
+:root .side-link.active > svg,
+:root .side-link.active:hover > svg {
+  color: #8fdde1;
+  filter: drop-shadow(0 0 7px rgba(85, 168, 255, 0.18));
+  transform: none;
+}
+
+:root .sidebar-bottom {
+  gap: 12px;
+}
+
+:root .sidebar-bottom .pro-card {
+  border-color: rgba(143, 214, 223, 0.105);
+  background:
+    radial-gradient(circle at 88% 13%, rgba(87, 220, 198, 0.11), transparent 88px),
+    radial-gradient(circle at 12% 100%, rgba(76, 166, 255, 0.055), transparent 110px),
+    linear-gradient(148deg, rgba(23, 29, 31, 0.91), rgba(10, 15, 17, 0.95));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.075),
+    0 18px 44px rgba(0, 0, 0, 0.12);
+}
+
+:root .pro-card > small {
+  color: rgba(143, 214, 223, 0.62);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.085em;
+  text-transform: uppercase;
+}
+
+:root .support-button {
+  min-height: 42px;
+  border-color: rgba(255, 255, 255, 0.07);
+  background:
+    linear-gradient(100deg, rgba(255, 255, 255, 0.042), rgba(143, 214, 223, 0.018)),
+    rgba(255, 255, 255, 0.012);
+  color: rgba(247, 247, 243, 0.68);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+:root .support-button:hover {
+  border-color: rgba(143, 214, 223, 0.12);
+  background: linear-gradient(100deg, rgba(143, 214, 223, 0.065), rgba(255, 255, 255, 0.022));
+  color: rgba(247, 247, 243, 0.9);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055);
+  transform: translateY(-1px);
+}
+
+:root[data-theme="light"] .portal-sidebar {
+  border-color: rgba(39, 125, 135, 0.13);
+  background:
+    radial-gradient(ellipse 92% 34% at 5% 0%, rgba(255, 255, 255, 0.92), transparent 72%),
+    radial-gradient(ellipse 96% 34% at 100% 100%, rgba(39, 125, 135, 0.065), transparent 74%),
+    linear-gradient(154deg, rgba(241, 246, 247, 0.985), rgba(226, 235, 237, 0.985));
+  box-shadow:
+    0 28px 72px rgba(53, 75, 80, 0.125),
+    inset 0 1px 0 rgba(255, 255, 255, 0.94),
+    inset 0 -1px 0 rgba(39, 125, 135, 0.035);
+}
+
+:root[data-theme="light"] .portal-sidebar::before {
+  background:
+    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.96), transparent) 18% 0 / 44% 1px no-repeat,
+    linear-gradient(180deg, transparent, rgba(39, 125, 135, 0.13), transparent) 100% 18% / 1px 28% no-repeat,
+    radial-gradient(230px 76px at 18% 0%, rgba(255, 255, 255, 0.68), transparent 76%);
+  opacity: 0.86;
+}
+
+:root[data-theme="light"] .side-link {
+  border-color: transparent;
+  background: transparent;
+  color: var(--theme-text-secondary);
+}
+
+:root[data-theme="light"] .side-link > svg {
+  color: rgba(55, 79, 84, 0.68);
+}
+
+:root[data-theme="light"] .side-link:hover {
+  border-color: rgba(39, 125, 135, 0.08);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.3) 64%, transparent);
+  color: var(--theme-text-primary);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+:root[data-theme="light"] .side-link:hover > svg {
+  color: var(--theme-accent-strong);
+}
+
+:root[data-theme="light"] .side-link.active,
+:root[data-theme="light"] .side-link.active:hover {
+  border-color: var(--theme-border);
+  background:
+    linear-gradient(92deg, rgba(255, 255, 255, 0.72), rgba(232, 241, 242, 0.72)),
+    var(--theme-surface-active);
+  color: var(--theme-accent-strong);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 9px 22px rgba(45, 75, 82, 0.055);
+}
+
+:root[data-theme="light"] .side-link.active > svg,
+:root[data-theme="light"] .side-link.active:hover > svg {
+  color: var(--theme-accent-strong);
+  filter: drop-shadow(0 0 6px rgba(39, 125, 135, 0.12));
+}
+
+:root[data-theme="light"] .sidebar-bottom .pro-card {
+  border-color: rgba(39, 125, 135, 0.13);
+  background:
+    radial-gradient(circle at 88% 13%, rgba(49, 111, 168, 0.11), transparent 92px),
+    radial-gradient(circle at 10% 100%, rgba(39, 125, 135, 0.055), transparent 110px),
+    linear-gradient(148deg, rgba(255, 255, 255, 0.76), rgba(226, 236, 238, 0.83));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.94),
+    0 17px 38px rgba(45, 75, 82, 0.07);
+}
+
+:root[data-theme="light"] .pro-card > small {
+  color: var(--theme-accent-strong);
+}
+
+:root[data-theme="light"] .support-button {
+  border-color: rgba(39, 125, 135, 0.1);
+  background: rgba(255, 255, 255, 0.44);
+  color: var(--theme-text-secondary);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.88);
+}
+
+:root[data-theme="light"] .support-button:hover {
+  border-color: rgba(39, 125, 135, 0.18);
+  background: rgba(255, 255, 255, 0.66);
+  color: var(--theme-accent-strong);
+}
+
+@media (max-height: 760px) and (min-width: 1081px) {
+  :root .side-link,
+  :root .side-link.active,
+  :root .side-link.active:hover {
+    min-height: 34px;
+  }
+}
+

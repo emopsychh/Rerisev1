@@ -328,6 +328,10 @@ def build_structure(partner: PartnerProfile, *, leg: str | None = None, depth: i
             "total_pv": total_pv,
         },
         "members": members,
+        "tree": {
+            "root_id": "self",
+            "directory": _build_tree_directory(partner, depth),
+        },
     }
 
 
@@ -349,6 +353,7 @@ def _iter_leg_members(root: PartnerProfile, leg: str, max_depth: int):
                 else "Неактивен"
             )
             yield {
+                "id": str(node.pk),
                 "name": format_partner_name(node.user.profile),
                 "branch": LEG_TITLES[leg],
                 "branch_id": leg,
@@ -356,6 +361,7 @@ def _iter_leg_members(root: PartnerProfile, leg: str, max_depth: int):
                 "pv": pv,
                 "status": "Активен" if node.is_active else "Неактивен",
                 "activity": activity,
+                "active": node.is_active,
             }
             next_frontier.extend(
                 placement.partner
@@ -365,3 +371,100 @@ def _iter_leg_members(root: PartnerProfile, leg: str, max_depth: int):
             )
         frontier = next_frontier
         level += 1
+
+
+def _subtree_counts(partner: PartnerProfile, max_depth: int) -> tuple[int, int]:
+    """Число партнёров в поддереве (включая корень) и сколько из них активны."""
+    total = 1
+    active = 1 if partner.is_active else 0
+    if max_depth <= 0:
+        return total, active
+    frontier = [
+        placement.partner
+        for placement in BinaryPlacement.objects.filter(parent=partner).select_related("partner")
+    ]
+    depth = 1
+    while frontier and depth <= max_depth:
+        next_frontier = []
+        for node in frontier:
+            total += 1
+            if node.is_active:
+                active += 1
+            next_frontier.extend(
+                placement.partner
+                for placement in BinaryPlacement.objects.filter(parent=node).select_related("partner")
+            )
+        frontier = next_frontier
+        depth += 1
+    return total, active
+
+
+def _build_tree_directory(partner: PartnerProfile, max_depth: int) -> dict:
+    """Словарь узлов бинара: корень = self, дети = left/right ids."""
+    directory: dict = {}
+    partner = PartnerProfile.objects.select_related("user__profile").get(pk=partner.pk)
+
+    def visit(
+        node: PartnerProfile,
+        *,
+        node_id: str,
+        parent_id: str | None,
+        branch_id: str | None,
+        level: int,
+        remaining_depth: int,
+    ) -> None:
+        left_placement = _leg_children(node, LEG_LEFT) if remaining_depth > 0 else None
+        right_placement = _leg_children(node, LEG_RIGHT) if remaining_depth > 0 else None
+        left_id = str(left_placement.partner_id) if left_placement else None
+        right_id = str(right_placement.partner_id) if right_placement else None
+
+        if left_placement and remaining_depth > 0:
+            visit(
+                left_placement.partner,
+                node_id=left_id,  # type: ignore[arg-type]
+                parent_id=node_id,
+                branch_id=LEG_LEFT,
+                level=level + 1,
+                remaining_depth=remaining_depth - 1,
+            )
+        if right_placement and remaining_depth > 0:
+            visit(
+                right_placement.partner,
+                node_id=right_id,  # type: ignore[arg-type]
+                parent_id=node_id,
+                branch_id=LEG_RIGHT,
+                level=level + 1,
+                remaining_depth=remaining_depth - 1,
+            )
+
+        name = format_partner_name(node.user.profile)
+        initial = (name[:1] or "R").upper()
+        team_size, active_team = _subtree_counts(node, remaining_depth)
+        balance = BinaryBalance.objects.filter(partner=node).first()
+        pv = (balance.left_pv + balance.right_pv) if balance else 0
+
+        directory[node_id] = {
+            "id": node_id,
+            "name": name,
+            "initial": initial,
+            "rank": rank_name(node.current_rank),
+            "parentId": parent_id,
+            "branchId": branch_id,
+            "level": f"L{level}",
+            "active": node.is_active,
+            "children": [left_id, right_id],
+            "teamSize": team_size,
+            "activeTeam": active_team,
+            "remainingPv": pv,
+            "pv": pv,
+        }
+
+    visit(
+        partner,
+        node_id="self",
+        parent_id=None,
+        branch_id=None,
+        level=0,
+        remaining_depth=max_depth,
+    )
+    return directory

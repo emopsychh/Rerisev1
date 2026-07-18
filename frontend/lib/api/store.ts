@@ -24,6 +24,7 @@ export async function fetchTokenPacks() {
       name?: string;
       price_usd: number;
       amount: number;
+      tokens_per_usd?: number;
     }>;
   }>("/store/tokens");
   return data.packs ?? [];

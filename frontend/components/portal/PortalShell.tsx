@@ -19,7 +19,6 @@ import { markAllNotificationsRead, markNotificationRead } from "../../lib/api/me
 import {
   formatApiDate,
   formatLeadTime,
-  languages,
   materialCards,
   mobileLabels,
   mobileMoreIds,
@@ -27,7 +26,7 @@ import {
   navItems,
   tariffDisplayName,
 } from "../../lib/portal";
-import type { DetailView, Lang, MarketTab, NotifyFn, SectionId, TFn } from "../../lib/portal";
+import type { DetailView, MarketTab, NotifyFn, SectionId, TFn } from "../../lib/portal";
 import { InviteDialog } from "./dialogs/InviteDialog";
 import { RenewalDialog } from "./dialogs/RenewalDialog";
 import { StatusLadderDialog } from "./dialogs/StatusLadderDialog";
@@ -82,11 +81,6 @@ export function PortalShellInner(props: {
   setIsNotificationsOpen: (v: boolean | ((v: boolean) => boolean)) => void;
   notificationCount: number;
   setNotificationCount: (v: number | ((n: number) => number)) => void;
-  lang: Lang;
-  setLang: (lang: Lang) => void;
-  isLangOpen: boolean;
-  setIsLangOpen: (v: boolean | ((v: boolean) => boolean)) => void;
-  languageSwitcherRef: React.RefObject<HTMLDivElement | null>;
   logout: () => void;
   user: { first_name: string; last_name: string; email: string; public_id: string };
 }) {
@@ -96,7 +90,7 @@ export function PortalShellInner(props: {
     closeInvite, closePortalDialog, notify, toast,
     isInviteOpen, isRenewalOpen, isRanksOpen, isMobileMoreOpen, setIsMobileMoreOpen,
     isNotificationsOpen, setIsNotificationsOpen, notificationCount, setNotificationCount,
-    lang, setLang, isLangOpen, setIsLangOpen, languageSwitcherRef, logout, user,
+    logout, user,
   } = props;
   const { refreshMe } = useAuth();
   const backend = usePortalBackend();
@@ -227,8 +221,8 @@ export function PortalShellInner(props: {
               <div className="topbar-team-title">
                 <h1>{title}</h1>
                 <div className="topbar-team-metrics" aria-label={t("Общие показатели команды")}>
-                  <span><Users size={15} /><strong>{teamSummary?.total_members ?? 176}</strong><small>{t("партнёров")}</small></span>
-                  <span><i /><strong>{teamSummary?.active_members ?? 53}</strong><small>{t("активных")}</small></span>
+                  <span><Users size={15} /><strong>{teamSummary?.total_members ?? 0}</strong><small>{t("партнёров")}</small></span>
+                  <span><i /><strong>{teamSummary?.active_members ?? 0}</strong><small>{t("активных")}</small></span>
                 </div>
               </div>
             ) : <h1>{title}</h1>}
@@ -254,39 +248,6 @@ export function PortalShellInner(props: {
               {t("Пригласить")}
             </button>
             <ThemeToggle className="topbar-theme-toggle" />
-            <div
-              ref={languageSwitcherRef}
-              className={isLangOpen ? "language-switcher open" : "language-switcher"}
-              aria-label="Language"
-            >
-              <button
-                aria-label={`${t("Выбрать язык")}: ${languages.find((language) => language.id === lang)?.label}`}
-                aria-expanded={isLangOpen}
-                aria-haspopup="listbox"
-                aria-controls="language-menu"
-                onClick={() => setIsLangOpen((isOpen) => !isOpen)}
-              >
-                {languages.find((language) => language.id === lang)?.label}
-              </button>
-              {isLangOpen ? (
-                <div className="language-menu" id="language-menu" role="listbox">
-                  {languages.map((language) => (
-                    <button
-                      className={lang === language.id ? "active" : ""}
-                      key={language.id}
-                      onClick={() => {
-                        setLang(language.id);
-                        setIsLangOpen(false);
-                      }}
-                      role="option"
-                      aria-selected={lang === language.id}
-                    >
-                      {language.label}
-                    </button>
-                  ))}
-                </div>
-              ) : null}
-            </div>
             <button
               className="bell-button"
               aria-label={t("Уведомления")}

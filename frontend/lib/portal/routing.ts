@@ -115,7 +115,11 @@ export function marketOfferFromPathname(pathname: string): MarketOffer | null {
     price: item.price,
     pv: item.pv,
     text: item.text,
-    features: ["Номиналы, способы использования и правила списания находятся в проработке"],
+    features: [
+      "Токены зачисляются на баланс AI Hub",
+      "Не участвуют в PV и партнёрских начислениях",
+    ],
+    productId: slug.includes("5000") ? "tokens-5000" : "tokens-1000",
   } : null;
 }
 
