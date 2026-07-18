@@ -13,8 +13,10 @@ from apps.users.views import (
     RefreshView,
     RegisterView,
 )
+from core.health import HealthView
 
 urlpatterns = [
+    path("health/", HealthView.as_view(), name="health"),
     path("auth/register", RegisterView.as_view(), name="auth-register"),
     path("auth/login", LoginView.as_view(), name="auth-login"),
     path("auth/refresh", RefreshView.as_view(), name="auth-refresh"),

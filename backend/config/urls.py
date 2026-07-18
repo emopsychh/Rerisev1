@@ -1,3 +1,5 @@
+import os
+
 from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path, re_path
@@ -20,7 +22,8 @@ urlpatterns = [
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="docs"),
 ]
 
-if settings.DEBUG:
+# In production nginx serves /media/; keep Django fallback for local / single-container.
+if settings.DEBUG or os.getenv("DJANGO_SERVE_MEDIA", "false").lower() == "true":
     urlpatterns += [
         re_path(
             r"^media/(?P<path>.*)$",
