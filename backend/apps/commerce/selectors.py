@@ -39,6 +39,42 @@ def subscription_can_renew(subscription: Subscription | None) -> bool:
     return subscription.active_until <= timezone.now() + timedelta(days=window_days)
 
 
+def get_orders_for_user(user_id: int, *, limit: int = 20):
+    return (
+        Order.objects.filter(user_id=user_id)
+        .select_related("product")
+        .order_by("-created_at")[:limit]
+    )
+
+
+def serialize_order_list_item(order: Order) -> dict:
+    status_labels = {
+        Order.STATUS_PENDING: "Ожидает оплаты",
+        Order.STATUS_PAID: "Оплачен",
+        Order.STATUS_EXPIRED: "Истёк",
+        Order.STATUS_CANCELLED: "Отменён",
+        Order.STATUS_REFUNDED: "Возврат",
+    }
+    type_labels = {
+        Order.TYPE_PURCHASE: "Покупка",
+        Order.TYPE_UPGRADE: "Апгрейд",
+        Order.TYPE_RENEWAL: "Продление",
+    }
+    return {
+        "id": order.id,
+        "product_name": order.product.name,
+        "order_type": order.order_type,
+        "order_type_label": type_labels.get(order.order_type, order.order_type),
+        "amount_usd": float(order.amount_usd),
+        "status": order.status,
+        "status_label": status_labels.get(order.status, order.status),
+        "created_at": order.created_at.isoformat().replace("+00:00", "Z"),
+        "paid_at": (
+            order.paid_at.isoformat().replace("+00:00", "Z") if order.paid_at else None
+        ),
+    }
+
+
 def get_order_for_user(order_id: int, user_id: int) -> Order:
     return (
         Order.objects.select_related("product", "product__tariff_plan")

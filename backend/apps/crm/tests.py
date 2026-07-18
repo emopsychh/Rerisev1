@@ -38,7 +38,7 @@ class CrmAPITestCase(AuthStoreTestMixin, TestCase):
                 "stage": "new",
                 "task": "Созвон завтра",
                 "value_usd": "300.00",
-                "note": "Интересуется AI Box",
+                "note": "Интересуется AI Hub",
             },
             format="json",
         )

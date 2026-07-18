@@ -7,7 +7,7 @@ import { materialCards, routeSlug } from "../../../lib/portal";
 import type { NotifyFn, TFn } from "../../../lib/portal";
 import { PortalDialog } from "../shared/PortalDialog";
 
-export function MaterialDetailView({ material, t, notify, openAiBox }: { material: (typeof materialCards)[number]; t: TFn; notify: NotifyFn; openAiBox: () => void }) {
+export function MaterialDetailView({ material, t, notify, openAiHub }: { material: (typeof materialCards)[number]; t: TFn; notify: NotifyFn; openAiHub: () => void }) {
   const router = useRouter();
   const pathname = usePathname();
   const Icon = material.icon;
@@ -77,7 +77,7 @@ export function MaterialDetailView({ material, t, notify, openAiBox }: { materia
         <span>{t("Раздел")}</span>
         <strong>{material.count}</strong>
         <p>{t("Материал доступен в вашем текущем аккаунте. Тарифные права будут уточнены отдельно.")}</p>
-        <button onClick={openAiBox}>{t("Открыть в AI Hub")}</button>
+        <button onClick={openAiHub}>{t("Открыть в AI Hub")}</button>
       </aside>
 
       {selectedFile ? (

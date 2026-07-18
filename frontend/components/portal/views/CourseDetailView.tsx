@@ -427,7 +427,9 @@ export function CourseDetailView({
                 {lessonDetail?.video?.url ? (
                   <video
                     key={lessonDetail.video.url}
+                    className="lesson-video"
                     controls
+                    controlsList="nodownload"
                     playsInline
                     preload="metadata"
                     src={resolveMediaUrl(lessonDetail.video.url)}
@@ -444,9 +446,6 @@ export function CourseDetailView({
                     </span>
                   </>
                 )}
-                {lessonDetail?.video?.url ? (
-                  <span>{durationLabel(lessonDetail.duration_minutes)} · {lessonDetail.video.quality || "HD"}</span>
-                ) : null}
               </div>
             )}
             <div className="lesson-preview-copy">

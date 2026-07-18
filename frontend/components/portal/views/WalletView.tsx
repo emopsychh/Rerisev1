@@ -8,6 +8,7 @@ import { createWithdraw, saveWalletAddress } from "../../../lib/api/wallet";
 import { ApiError } from "../../../lib/api/types";
 import { BINARY_RULES, WITHDRAWAL_RULES } from "../../../lib/marketing-plan";
 import {
+  formatLeadTime,
   formatUsd,
   hasUsdtAddress,
   maskWalletAddress,
@@ -23,6 +24,11 @@ export function WalletView({ t, notify }: { t: TFn; notify: NotifyFn }) {
   const router = useRouter();
   const pathname = usePathname();
   const { wallet, reload, ready } = usePortalBackend();
+
+  useEffect(() => {
+    void reload();
+  }, [reload]);
+
   const balance = wallet?.balance as { available_usd?: number; pending_usd?: number; total_earned_usd?: number } | undefined;
   const availableUsd = Number(balance?.available_usd ?? 0);
   const limits = wallet?.withdrawal_limits as { min_usd?: number; max_per_request_usd?: number } | undefined;
@@ -40,17 +46,25 @@ export function WalletView({ t, notify }: { t: TFn; notify: NotifyFn }) {
     if (type.includes("personal") || type.includes("direct")) return "personal";
     return "personal";
   };
+  const mapTitle = (typeKey: string, direction: string, fallbackTitle: string) => {
+    const type = typeKey.toLowerCase();
+    if (type.includes("adjust")) {
+      return direction === "debit" ? "Списание" : "Начисление";
+    }
+    return fallbackTitle || typeKey || "Операция";
+  };
   const transactions = recentApiTx.map((tx, index) => {
     const rawAmount = Number(tx.amount_usd ?? tx.amount ?? 0);
     const direction = String(tx.direction || "").toLowerCase();
     const signed = direction === "debit" || direction === "out" ? -Math.abs(rawAmount) : Math.abs(rawAmount);
     const typeKey = String(tx.type || tx.entry_type || "");
+    const createdAt = String(tx.created_at || "");
     return {
       id: String(tx.id || `TX-${index}`),
-      title: String(tx.title || typeKey || "Операция"),
-      meta: String(tx.created_at || ""),
+      title: mapTitle(typeKey, direction, String(tx.title || "")),
+      meta: formatLeadTime(createdAt),
       amount: signed,
-      date: String(tx.created_at || "").slice(0, 10) || new Date().toISOString().slice(0, 10),
+      date: createdAt.slice(0, 10) || new Date().toISOString().slice(0, 10),
       type: signed >= 0 ? "income" as const : "expense" as const,
       category: mapCategory(typeKey),
       status: "Завершено",
@@ -303,7 +317,7 @@ export function WalletView({ t, notify }: { t: TFn; notify: NotifyFn }) {
                 <span className={item.type}><CreditCard size={18} /></span>
                 <div>
                   <strong>{t(item.title)}</strong>
-                  <p>{t(item.meta)}</p>
+                  <p>{item.meta}</p>
                 </div>
                 <b className={item.type}>{formatAmount(item.amount)}</b>
                 <em>{t(item.status)}</em>

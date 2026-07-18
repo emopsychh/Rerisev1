@@ -13,9 +13,12 @@ import {
   X,
 } from "lucide-react";
 import { ThemeToggle } from "../../app/theme-toggle";
+import { useAuth } from "../../lib/auth/AuthProvider";
 import { usePortalBackend } from "../../lib/auth/PortalBackendProvider";
+import { markAllNotificationsRead, markNotificationRead } from "../../lib/api/me";
 import {
   formatApiDate,
+  formatLeadTime,
   languages,
   materialCards,
   mobileLabels,
@@ -43,6 +46,13 @@ import { ProfileView } from "./views/ProfileView";
 import { WalletView } from "./views/WalletView";
 import { WorkspaceView } from "./views/WorkspaceView";
 
+function notificationTarget(type: string): SectionId {
+  if (type === "bonus") return "wallet";
+  if (type === "crm") return "crm";
+  if (type === "access") return "marketplace";
+  return "home";
+}
+
 export function PortalShellInner(props: {
   active: SectionId;
   detail: DetailView | null;
@@ -58,7 +68,7 @@ export function PortalShellInner(props: {
   openInvite: () => void;
   openRenewal: () => void;
   openRanks: () => void;
-  openAiBox: () => void;
+  openAiHub: () => void;
   closeInvite: () => void;
   closePortalDialog: () => void;
   notify: NotifyFn;
@@ -82,12 +92,13 @@ export function PortalShellInner(props: {
 }) {
   const {
     active, detail, t, title, marketTab, goSection, goMarketTab, goHomeFromBrand, goBack,
-    openCourse, openMaterial, openInvite, openRenewal, openRanks, openAiBox,
+    openCourse, openMaterial, openInvite, openRenewal, openRanks, openAiHub,
     closeInvite, closePortalDialog, notify, toast,
     isInviteOpen, isRenewalOpen, isRanksOpen, isMobileMoreOpen, setIsMobileMoreOpen,
     isNotificationsOpen, setIsNotificationsOpen, notificationCount, setNotificationCount,
     lang, setLang, isLangOpen, setIsLangOpen, languageSwitcherRef, logout, user,
   } = props;
+  const { refreshMe } = useAuth();
   const backend = usePortalBackend();
   const partnerSummary = backend.home?.partner_summary;
   const hasTariff = Boolean(partnerSummary?.tariff_id);
@@ -99,17 +110,40 @@ export function PortalShellInner(props: {
     ? formatApiDate(activityUntilRaw, "—")
     : null;
   const canRenew = Boolean(partnerSummary?.can_renew);
-  const liveNotifications = backend.notifications.length
-    ? backend.notifications.slice(0, 5).map((item) => ({
-        label: String(item.title || "Уведомление"),
-        meta: String(item.body || item.created_at || ""),
-        target: "home" as SectionId,
-      }))
-    : [
-        { label: "Новый урок доступен", meta: "ChatGPT с нуля · 5 минут назад", target: "home" as SectionId },
-        { label: "Начислен бонус за продление", meta: "+$9 · сегодня", target: "wallet" as SectionId },
-        { label: "Обновлены материалы", meta: "Скрипты продаж · сегодня", target: "library" as SectionId },
-      ];
+  const liveNotifications = backend.notifications.slice(0, 8).map((item) => {
+    const type = String(item.type || "system");
+    const body = String(item.body || "").trim();
+    const when = formatLeadTime(item.created_at);
+    return {
+      id: Number(item.id),
+      label: String(item.title || "Уведомление"),
+      meta: body ? `${body} · ${when}` : when,
+      target: notificationTarget(type),
+      isRead: Boolean(item.is_read),
+    };
+  });
+  const markAllRead = async () => {
+    try {
+      await markAllNotificationsRead();
+      setNotificationCount(0);
+      await Promise.all([backend.reload(), refreshMe()]);
+    } catch {
+      notify(t("Не удалось отметить уведомления"));
+    }
+  };
+  const openNotification = async (item: (typeof liveNotifications)[number]) => {
+    setIsNotificationsOpen(false);
+    if (!item.isRead && item.id) {
+      try {
+        await markNotificationRead(item.id);
+        setNotificationCount((count) => Math.max(0, count - 1));
+        await Promise.all([backend.reload(), refreshMe()]);
+      } catch {
+        /* navigation still proceeds */
+      }
+    }
+    goSection(item.target);
+  };
   const teamSummary = (backend.structure as { summary?: { total_members?: number; active_members?: number } } | null)?.summary;
 
   return (
@@ -266,28 +300,36 @@ export function PortalShellInner(props: {
               <div className="notification-popover">
                 <div>
                   <strong>{t("Уведомления")}</strong>
-                  <button onClick={() => setNotificationCount(0)}>{t("Прочитать все")}</button>
+                  {liveNotifications.length > 0 ? (
+                    <button type="button" onClick={() => void markAllRead()}>{t("Прочитать все")}</button>
+                  ) : null}
                 </div>
-                {liveNotifications.map((item) => (
-                  <button key={item.label} onClick={() => {
-                    setNotificationCount(0);
-                    goSection(item.target);
-                  }}>
-                    <span />
-                    <div>
-                      <strong>{t(item.label)}</strong>
-                      <small>{t(item.meta)}</small>
-                    </div>
-                  </button>
-                ))}
+                {liveNotifications.length === 0 ? (
+                  <p className="notification-popover-empty">{t("Пока нет уведомлений")}</p>
+                ) : (
+                  liveNotifications.map((item) => (
+                    <button
+                      key={item.id || item.label}
+                      type="button"
+                      className={item.isRead ? "is-read" : undefined}
+                      onClick={() => void openNotification(item)}
+                    >
+                      <span />
+                      <div>
+                        <strong>{item.label}</strong>
+                        <small>{item.meta}</small>
+                      </div>
+                    </button>
+                  ))
+                )}
               </div>
             ) : null}
           </div>
         </header>
 
         {detail?.type === "course" ? <CourseDetailView slug={detail.slug} t={t} notify={notify} /> : null}
-        {detail?.type === "material" ? <MaterialDetailView material={materialCards.find((item) => item.title === detail.title) ?? materialCards[0]} t={t} notify={notify} openAiBox={openAiBox} /> : null}
-        {!detail && active === "home" ? <HomeView setActive={goSection} openCourse={openCourse} openAiBox={openAiBox} t={t} notify={notify} /> : null}
+        {detail?.type === "material" ? <MaterialDetailView material={materialCards.find((item) => item.title === detail.title) ?? materialCards[0]} t={t} notify={notify} openAiHub={openAiHub} /> : null}
+        {!detail && active === "home" ? <HomeView setActive={goSection} openCourse={openCourse} openAiHub={openAiHub} t={t} notify={notify} /> : null}
         {!detail && active === "cabinet" ? <CabinetView setActive={goSection} t={t} notify={notify} onInvite={openInvite} onOpenRanks={openRanks} /> : null}
         {!detail && active === "workspace" ? <WorkspaceView t={t} notify={notify} /> : null}
         {!detail && active === "courses" ? <CoursesView openCourse={openCourse} t={t} /> : null}
@@ -307,7 +349,7 @@ export function PortalShellInner(props: {
             type="button"
             className={active === item.id || (item.id === "home" && active === "courses") ? "mobile-link active" : "mobile-link"}
             key={item.id}
-            onClick={() => item.id === "workspace" ? openAiBox() : item.id === "marketplace" ? goMarketTab("packages") : goSection(item.id)}
+            onClick={() => item.id === "workspace" ? openAiHub() : item.id === "marketplace" ? goMarketTab("packages") : goSection(item.id)}
           >
             <item.icon size={20} />
             <span>{t(mobileLabels[item.id])}</span>

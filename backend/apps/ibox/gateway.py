@@ -43,7 +43,7 @@ class MockAIProvider(AIProvider):
         if len(preview) > 120:
             preview = preview[:117] + "..."
 
-        prefix = "Сценарий выполнен." if system_prompt else "Ответ AI Box."
+        prefix = "Сценарий выполнен." if system_prompt else "Ответ AI Hub."
         content = (
             f"{prefix} (mock/{model})\n\n"
             f"Вот черновик по вашему запросу:\n«{preview}»\n\n"

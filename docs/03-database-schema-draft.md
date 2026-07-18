@@ -528,7 +528,7 @@ Program (курс)  →  Module (модуль)  →  Lesson (урок)  →  Les
 | duration_minutes | SMALLINT NULL | 9 мин |
 | video_url | TEXT NULL | URL видео |
 | video_quality | VARCHAR(10) NULL | HD / SD |
-| ibox_scenario_id | BIGINT FK NULL | практика в AI Box |
+| ibox_scenario_id | BIGINT FK NULL | практика в AI Hub |
 | is_published | BOOLEAN DEFAULT true | |
 
 **Индексы:** `(module_id, order)` UNIQUE
@@ -915,7 +915,7 @@ academy_program
 1. **Алгоритм автопозиционирования в бинаре** — влияет на `partner_binary_placement` (поиск свободной позиции).
 2. **Сеть USDT** — TRC20 / ERC20 в `wallet_withdrawal_request.network`.
 3. **Состав токенов по тарифам** — `commerce_tariff_plan.initial_tokens` (не утверждено).
-4. **Проекты (Projects)** — отдельный модуль позже; пока результаты iBox → `ibox_chat_session`.
+4. **Проекты (Projects)** — отдельный модуль позже; пока результаты AI Hub → `ibox_chat_session`.
 5. **Внутренние переводы** — таблица `wallet_internal_transfer` добавим, когда утвердят правила.
 
 ---

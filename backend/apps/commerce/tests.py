@@ -211,3 +211,10 @@ class CommerceAPITestCase(TestCase):
         self.assertEqual(detail.status_code, status.HTTP_200_OK)
         self.assertEqual(detail.data["data"]["status"], "paid")
         self.assertEqual(detail.data["data"]["granted_access"]["tariff"], "rise")
+
+        listing = self.client.get("/api/v1/store/orders")
+        self.assertEqual(listing.status_code, status.HTTP_200_OK)
+        self.assertGreaterEqual(len(listing.data["data"]), 1)
+        self.assertEqual(listing.data["data"][0]["id"], order_id)
+        self.assertIn("product_name", listing.data["data"][0])
+        self.assertIn("status_label", listing.data["data"][0])

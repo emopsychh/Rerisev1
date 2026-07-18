@@ -72,12 +72,16 @@ class ContentAPITestCase(AuthStoreTestMixin, TestCase):
         data = response.data["data"]
         self.assertTrue(data["community_active"])
         self.assertEqual(len(data["chats"]), 5)
+        self.assertIsNotNone(data.get("marketing_channel"))
+        self.assertEqual(data["marketing_channel"]["title"], "Канал маркетинга")
+        self.assertTrue(data["marketing_channel"]["is_accessible"])
 
         by_title = {chat["title"]: chat for chat in data["chats"]}
         self.assertTrue(by_title["Чат партнёров"]["is_accessible"])
         self.assertFalse(by_title["Чат лидеров"]["is_accessible"])
         self.assertEqual(by_title["Чат лидеров"]["access_requirement"], "Партнёр II и выше")
         self.assertIsNone(by_title["Чат лидеров"]["telegram_url"])
+        self.assertNotIn("Канал маркетинга", by_title)
 
     def test_chats_invite_unlocked_after_rank_up(self):
         partner = PartnerProfile.objects.get(user__email="member@rerise.ai")

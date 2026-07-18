@@ -38,7 +38,7 @@ BANNERS = [
 ]
 
 CATEGORIES = [
-    {"slug": "ai-box", "name": "AI Box", "icon": "ibox", "sort_order": 0},
+    {"slug": "ai-box", "name": "AI Hub", "icon": "ibox", "sort_order": 0},
     {"slug": "sales", "name": "Продажи", "icon": "sales", "sort_order": 1},
     {"slug": "content", "name": "Контент", "icon": "content", "sort_order": 2},
     {"slug": "partner", "name": "Партнёрство", "icon": "partner", "sort_order": 3},
@@ -77,7 +77,7 @@ GROUPS = [
         "category": "ai-box",
         "sort_order": 1,
         "title": "Flows",
-        "description": "Многошаговые сценарии в AI Box",
+        "description": "Многошаговые сценарии в AI Hub",
         "file_type": FILE_TYPE_FLOW,
         "required_tariff": "rise-pro",
         "files": [
@@ -272,6 +272,15 @@ CHATS = [
         "description": "Сервисный чат по доступу, оплате и техническим вопросам",
         "chat_type": CHAT_TYPE_SERVICE,
         "telegram_url": "https://t.me/rerise_support",
+        "min_rank": None,
+        "access_requirement": None,
+    },
+    {
+        "sort_order": 5,
+        "title": "Канал маркетинга",
+        "description": "Готовые посты, визуалы, новости запусков и сценарии продвижения.",
+        "chat_type": CHAT_TYPE_OPEN,
+        "telegram_url": "https://t.me/rerise_marketing",
         "min_rank": None,
         "access_requirement": None,
     },

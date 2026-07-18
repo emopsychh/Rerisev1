@@ -38,7 +38,13 @@ export async function fetchNotifications() {
 }
 
 export async function markAllNotificationsRead() {
-  return apiRequest<{ updated: number }>("/notifications/read-all", {
+  return apiRequest<{ marked: number }>("/notifications/read-all", {
+    method: "PATCH",
+  });
+}
+
+export async function markNotificationRead(id: number) {
+  return apiRequest<{ is_read: boolean }>(`/notifications/${id}/read`, {
     method: "PATCH",
   });
 }

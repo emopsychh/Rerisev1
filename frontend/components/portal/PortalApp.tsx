@@ -43,7 +43,7 @@ export function PortalAppContent() {
   const [isRanksOpen, setIsRanksOpen] = useState(false);
   const [isMobileMoreOpen, setIsMobileMoreOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(3);
+  const [notificationCount, setNotificationCount] = useState(0);
   const [marketTab, setMarketTab] = useState<MarketTab>(() => marketTabFromPathname(pathname) ?? "packages");
   const languageSwitcherRef = useRef<HTMLDivElement | null>(null);
   const t = useMemo<TFn>(() => (value: string) => translate(value, lang), [lang]);
@@ -227,7 +227,7 @@ export function PortalAppContent() {
     setDetail(null);
     router.push(sectionHref(detail.returnTo), { scroll: false });
   };
-  const openAiBox = () => {
+  const openAiHub = () => {
     setActive("workspace");
     router.push("/?section=workspace", { scroll: false });
   };
@@ -261,7 +261,7 @@ export function PortalAppContent() {
       openInvite={openInvite}
       openRenewal={openRenewal}
       openRanks={openRanks}
-      openAiBox={openAiBox}
+      openAiHub={openAiHub}
       closeInvite={closeInvite}
       closePortalDialog={closePortalDialog}
       notify={notify}

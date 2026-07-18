@@ -155,7 +155,7 @@ SPECTACULAR_SETTINGS = {
         {"name": "Wallet", "description": "Баланс и вывод"},
         {"name": "Academy", "description": "Обучение"},
         {"name": "Content", "description": "Home, материалы, чаты"},
-        {"name": "iBox", "description": "AI Box"},
+        {"name": "AI Hub", "description": "Сценарии, сессии и токены AI Hub"},
         {"name": "CRM", "description": "Канбан лидов"},
         {"name": "Admin", "description": "Staff-операции"},
     ],
@@ -175,7 +175,7 @@ MANUAL_PAYMENT_INSTRUCTIONS = os.getenv(
 ACTIVITY_DAYS_PER_MONTH = int(os.getenv("ACTIVITY_DAYS_PER_MONTH", "30"))
 RENEWAL_WINDOW_DAYS = int(os.getenv("RENEWAL_WINDOW_DAYS", "7"))
 
-# iBox AI Gateway: mock (default) | openai
+# AI Hub gateway: mock (default) | openai
 IBOX_AI_PROVIDER = os.getenv("IBOX_AI_PROVIDER", "mock")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 

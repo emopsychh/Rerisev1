@@ -38,7 +38,7 @@ const HOME_IMAGE_BANNERS: HomeBannerSlide[] = promoBanners.slice(0, 2).map((bann
   eyebrow: banner.eyebrow,
 }));
 
-export function HomeView({ setActive, openCourse, openAiBox, t, notify }: { setActive: (id: SectionId) => void; openCourse: (courseSlug: string, returnTo: SectionId, courseTitle?: string) => void; openAiBox: () => void; t: TFn; notify: NotifyFn }) {
+export function HomeView({ setActive, openCourse, openAiHub, t, notify }: { setActive: (id: SectionId) => void; openCourse: (courseSlug: string, returnTo: SectionId, courseTitle?: string) => void; openAiHub: () => void; t: TFn; notify: NotifyFn }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { home, programs, ready } = usePortalBackend();
@@ -182,7 +182,7 @@ export function HomeView({ setActive, openCourse, openAiBox, t, notify }: { setA
               <small>{home.token_balance.toLocaleString("ru-RU")} {t("токенов")}</small>
             ) : null}
           </div>
-          <button type="button" onClick={openAiBox} disabled={home?.ai_box_widget?.is_available === false}>
+          <button type="button" onClick={openAiHub} disabled={home?.ai_box_widget?.is_available === false}>
             {t("Открыть AI Hub")}
             <ArrowUpRight size={17} />
           </button>
@@ -209,8 +209,8 @@ export function HomeView({ setActive, openCourse, openAiBox, t, notify }: { setA
                   setActive("wallet");
                   return;
                 }
-                if (link.includes("ibox") || link.includes("workspace")) {
-                  openAiBox();
+                if (link.includes("ibox") || link.includes("workspace") || link.includes("ai-hub") || link.includes("aihub")) {
+                  openAiHub();
                   return;
                 }
                 if (link.includes("program") || link.includes("course") || link.includes("lesson")) {

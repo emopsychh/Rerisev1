@@ -1,7 +1,12 @@
+from decimal import Decimal, InvalidOperation
+
+from django import forms
 from django.contrib import admin, messages
 
 from core.admin import ModelAdmin
-from apps.admin_ops.services import AuditLogger
+from apps.admin_ops.services import AdminAdjustmentService, AuditLogger
+from apps.ledger.constants import DIRECTION_CREDIT, DIRECTION_DEBIT
+from apps.ledger.services import LedgerError
 from apps.wallet.constants import (
     WITHDRAWAL_STATUS_APPROVED,
     WITHDRAWAL_STATUS_PENDING,
@@ -10,12 +15,108 @@ from apps.wallet.models import Balance, SavedAddress, WithdrawalRequest
 from apps.wallet.services import WithdrawalService, WithdrawalValidationError
 
 
+class BalanceAdminForm(forms.ModelForm):
+    credit_usd = forms.DecimalField(
+        label="Начислить USD",
+        required=False,
+        min_value=Decimal("0.01"),
+        max_digits=12,
+        decimal_places=2,
+        help_text="Создаст проводку в журнале. Баланс сам пересчитается.",
+    )
+    debit_usd = forms.DecimalField(
+        label="Списать USD",
+        required=False,
+        min_value=Decimal("0.01"),
+        max_digits=12,
+        decimal_places=2,
+        help_text="Списание с доступного баланса через журнал.",
+    )
+    adjustment_reason = forms.CharField(
+        label="Причина корректировки",
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 2}),
+        help_text="Обязательна, если начисляете или списываете.",
+    )
+
+    class Meta:
+        model = Balance
+        fields = ("user",)
+
+
 @admin.register(Balance)
 class BalanceAdmin(ModelAdmin):
-    section_description = "Денежный кошелёк пользователя: доступно к выводу, в ожидании и всего заработано."
+    section_description = (
+        "Баланс считается из журнала (ledger), а не правится руками. "
+        "Чтобы добавить средства пользователю — укажите сумму в поле «Начислить USD» и причину."
+    )
+    form = BalanceAdminForm
     list_display = ("user", "available_usd", "pending_usd", "total_earned_usd", "updated_at")
     search_fields = ("user__email",)
-    readonly_fields = ("updated_at",)
+    readonly_fields = ("available_usd", "pending_usd", "total_earned_usd", "updated_at")
+    fields = (
+        "user",
+        "available_usd",
+        "pending_usd",
+        "total_earned_usd",
+        "credit_usd",
+        "debit_usd",
+        "adjustment_reason",
+        "updated_at",
+    )
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj:
+            return ("user", "available_usd", "pending_usd", "total_earned_usd", "updated_at")
+        return ("available_usd", "pending_usd", "total_earned_usd", "updated_at")
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            super().save_model(request, obj, form, change)
+            return
+
+        credit = form.cleaned_data.get("credit_usd")
+        debit = form.cleaned_data.get("debit_usd")
+        reason = (form.cleaned_data.get("adjustment_reason") or "").strip()
+
+        if credit and debit:
+            messages.error(request, "Укажите либо начисление, либо списание — не оба сразу.")
+            return
+
+        if not credit and not debit:
+            messages.info(
+                request,
+                "Баланс не менялся. Чтобы добавить средства, заполните «Начислить USD» и причину.",
+            )
+            return
+
+        if not reason:
+            messages.error(request, "Укажите причину корректировки.")
+            return
+
+        try:
+            if credit:
+                amount = Decimal(str(credit))
+                AdminAdjustmentService.apply(
+                    obj.user,
+                    amount_usd=amount,
+                    direction=DIRECTION_CREDIT,
+                    reason=reason,
+                    actor=request.user,
+                )
+                messages.success(request, f"Начислено ${amount} пользователю {obj.user.email}")
+            else:
+                amount = Decimal(str(debit))
+                AdminAdjustmentService.apply(
+                    obj.user,
+                    amount_usd=amount,
+                    direction=DIRECTION_DEBIT,
+                    reason=reason,
+                    actor=request.user,
+                )
+                messages.success(request, f"Списано ${amount} у пользователя {obj.user.email}")
+        except (LedgerError, InvalidOperation) as exc:
+            messages.error(request, str(exc))
 
 
 @admin.register(WithdrawalRequest)

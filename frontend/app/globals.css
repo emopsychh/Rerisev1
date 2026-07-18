@@ -7426,6 +7426,7 @@ body {
   right: 0;
   z-index: 75;
   display: grid;
+  gap: 6px;
   width: min(390px, calc(100vw - 32px));
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -7441,7 +7442,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  padding: 10px 10px 12px;
+  padding: 10px 10px 6px;
 }
 
 .notification-popover > div strong {
@@ -7450,9 +7451,17 @@ body {
 }
 
 .notification-popover > div button {
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
   color: rgba(247, 247, 243, 0.56);
+  padding: 0 10px;
   font-size: 12px;
   font-weight: 600;
+}
+
+.notification-popover > div button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(247, 247, 243, 0.78);
 }
 
 .notification-popover > button {
@@ -7461,19 +7470,28 @@ body {
   align-items: center;
   gap: 12px;
   border-radius: 15px;
+  background: rgba(255, 255, 255, 0.045);
   padding: 12px 10px;
   text-align: left;
   transition: background 160ms ease;
 }
 
 .notification-popover > button:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.notification-popover > button.is-read {
+  opacity: 0.72;
 }
 
 .notification-popover > button > span {
   width: 7px;
   height: 7px;
   border-radius: 50%;
+  background: transparent;
+}
+
+.notification-popover > button:not(.is-read) > span {
   background: #8fd6df;
   box-shadow: 0 0 14px rgba(143, 214, 223, 0.42);
 }
@@ -7490,6 +7508,15 @@ body {
 
 .notification-popover > button small {
   color: rgba(247, 247, 243, 0.46);
+}
+
+.notification-popover-empty {
+  margin: 0;
+  padding: 18px 12px 22px;
+  color: rgba(247, 247, 243, 0.46);
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: center;
 }
 
 .portal-toast {
@@ -7899,9 +7926,20 @@ body {
 
 .detail-module-label { display: block; margin-bottom: 6px; color: #8fd6df; font-size: 12px; font-weight: 600; }
 .lesson-preview-player { position: relative; display: grid; min-height: 280px; place-items: center; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.09); border-radius: 20px; background: radial-gradient(circle at 50% 45%, rgba(143, 214, 223, 0.13), transparent 190px), rgba(255, 255, 255, 0.035); }
-.lesson-preview-player > video { display: block; width: 100%; height: 100%; min-height: 280px; max-height: 420px; object-fit: contain; background: #000; }
+.lesson-preview-player > video,
+.lesson-preview-player > .lesson-video {
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 280px;
+  max-height: 420px;
+  object-fit: contain;
+  background: #000;
+}
 .lesson-preview-player > div { display: grid; width: 74px; height: 74px; place-items: center; border-radius: 50%; background: rgba(247, 247, 243, 0.92); color: #101313; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3); }
-.lesson-preview-player > span { position: absolute; right: 15px; bottom: 15px; z-index: 1; border-radius: 99px; background: rgba(0, 0, 0, 0.42); color: rgba(247, 247, 243, 0.66); padding: 6px 9px; font-size: 12px; }
+.lesson-preview-player > span { position: absolute; right: 15px; bottom: 15px; z-index: 1; border-radius: 99px; background: rgba(0, 0, 0, 0.42); color: rgba(247, 247, 243, 0.66); padding: 6px 9px; font-size: 12px; pointer-events: none; }
 .lesson-dialog-body { display: grid; gap: 16px; }
 .lesson-dialog-body.is-loading .lesson-preview-copy,
 .lesson-dialog-body.is-loading .portal-dialog-actions { opacity: 0.72; transition: opacity 160ms ease; }
@@ -8470,6 +8508,21 @@ body {
 .chat-space-card p { margin: 0; color: rgba(247, 247, 243, 0.49); line-height: 1.5; }
 .chat-space-card > button { display: flex; min-height: 42px; align-items: center; justify-content: space-between; margin-top: auto; border-radius: 12px; background: rgba(255, 255, 255, 0.07); color: rgba(247, 247, 243, 0.74); padding: 0 13px; font-weight: 600; }
 .chat-space-card > button:hover { background: rgba(143, 214, 223, 0.11); color: #c8f0f2; }
+.chat-space-card > button:disabled,
+.chat-space-card > button:disabled:hover {
+  cursor: not-allowed;
+  opacity: 0.55;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(247, 247, 243, 0.42);
+}
+.chat-space-card.is-locked {
+  opacity: 0.82;
+}
+.chat-space-card header em {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
 .community-rules { display: flex; align-items: center; gap: 10px 20px; border-top: 1px solid rgba(255, 255, 255, 0.07); padding: 19px 4px 0; }
 .community-rules > strong { margin-right: auto; color: rgba(247, 247, 243, 0.72); }
 .community-rules > span { display: inline-flex; align-items: center; gap: 7px; color: rgba(247, 247, 243, 0.4); font-size: 12px; }
@@ -10843,16 +10896,30 @@ body {
   color: var(--theme-text-primary);
 }
 
-:root[data-theme="light"] .notification-popover > div button,
-:root[data-theme="light"] .notification-popover > button small {
+:root[data-theme="light"] .notification-popover > div button {
+  background: var(--theme-surface-2);
   color: var(--theme-text-muted);
+}
+
+:root[data-theme="light"] .notification-popover > div button:hover {
+  background: var(--theme-surface-hover);
+  color: var(--theme-text-secondary);
+}
+
+:root[data-theme="light"] .notification-popover > button {
+  background: var(--theme-surface-2);
 }
 
 :root[data-theme="light"] .notification-popover > button:hover {
   background: var(--theme-surface-hover);
 }
 
-:root[data-theme="light"] .notification-popover > button > span {
+:root[data-theme="light"] .notification-popover > button small,
+:root[data-theme="light"] .notification-popover-empty {
+  color: var(--theme-text-muted);
+}
+
+:root[data-theme="light"] .notification-popover > button:not(.is-read) > span {
   background: var(--theme-accent);
   box-shadow: 0 0 12px rgba(39, 125, 135, 0.3);
 }
@@ -12236,8 +12303,6 @@ body {
 
 :root .notification-popover > div button {
   min-height: var(--hit-compact);
-  border-radius: 10px;
-  padding-inline: 8px;
 }
 
 /* Carousel dots remain visually delicate, but no longer have a 9px hit area. */

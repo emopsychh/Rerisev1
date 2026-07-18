@@ -20,11 +20,30 @@ export function openTelegramResource(resource: TelegramResourceId, label: string
   window.open(url, "_blank", "noopener,noreferrer");
 }
 
-export function formatApiDate(value: unknown, fallback = "24.07.2026"): string {
+export function formatApiDate(value: unknown, fallback = "—"): string {
   if (!value) return fallback;
   const date = new Date(String(value));
   if (Number.isNaN(date.getTime())) return fallback;
   return date.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+export function describeCurrentDevice(): string {
+  if (typeof navigator === "undefined") return "Текущий браузер";
+  const ua = navigator.userAgent;
+  let browser = "Браузер";
+  if (/Edg\//.test(ua)) browser = "Edge";
+  else if (/Chrome\//.test(ua) && !/Chromium\//.test(ua)) browser = "Chrome";
+  else if (/Firefox\//.test(ua)) browser = "Firefox";
+  else if (/Safari\//.test(ua) && !/Chrome\//.test(ua)) browser = "Safari";
+
+  let os = "устройство";
+  if (/Windows/i.test(ua)) os = "Windows";
+  else if (/Mac OS X|Macintosh/i.test(ua)) os = "macOS";
+  else if (/Android/i.test(ua)) os = "Android";
+  else if (/iPhone|iPad/i.test(ua)) os = "iOS";
+  else if (/Linux/i.test(ua)) os = "Linux";
+
+  return `${browser} · ${os}`;
 }
 
 export function formatUsd(value: number, fallback = "$0"): string {

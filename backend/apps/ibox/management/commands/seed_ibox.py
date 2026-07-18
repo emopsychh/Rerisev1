@@ -128,7 +128,7 @@ SCENARIOS = [
 
 
 class Command(BaseCommand):
-    help = "Seed iBox scenarios (10 mock scenarios)"
+    help = "Seed AI Hub scenarios (10 mock scenarios)"
 
     def handle(self, *args, **options):
         for item in SCENARIOS:
@@ -144,5 +144,5 @@ class Command(BaseCommand):
             self.stdout.write(f"{action} scenario: {scenario.slug}")
 
         self.stdout.write(
-            self.style.SUCCESS(f"iBox seed complete: {Scenario.objects.count()} scenarios")
+            self.style.SUCCESS(f"AI Hub seed complete: {Scenario.objects.count()} scenarios")
         )

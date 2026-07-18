@@ -445,7 +445,7 @@ def grant_tariff(user, product):
 
 | Доступ | Rise | Rise Pro | Rise Pro Max |
 |---|---|---|---|
-| iBox (базовый) | ✅ огранич. | ✅ полный | ✅ полный |
+| AI Hub (базовый) | ✅ огранич. | ✅ полный | ✅ полный |
 | Academy (базовые) | ✅ 2–5 | ✅ основная | ✅ всё |
 | Materials | ❌ | ✅ | ✅ |
 | CRM | ❌ | ✅ Lite | ✅ полная |

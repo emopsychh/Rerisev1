@@ -87,7 +87,7 @@ def build_home_payload(user) -> dict:
     elif token_balance > 0:
         next_action = {
             "type": "open_ibox",
-            "title": "Открыть AI Box",
+            "title": "Открыть AI Hub",
             "subtitle": "Выберите сценарий или напишите задачу",
             "link": "/ibox",
         }
@@ -109,8 +109,8 @@ def build_home_payload(user) -> dict:
     return {
         "banners": banners,
         "ai_box_widget": {
-            "title": "RE:RISE AI — AI Box",
-            "description": "Выберите сценарий или напишите задачу",
+            "title": "RE:RISE AI — AI Hub",
+            "description": "AI Hub получил новые сценарии для контента и продаж",
             "is_available": True,
             "token_balance": token_balance,
         },
@@ -250,7 +250,8 @@ def build_chats_payload(user) -> dict:
 
     chats = TelegramChat.objects.filter(is_active=True).order_by("sort_order", "id")
     partner = PartnerProfile.objects.filter(user=user).first()
-    payload = []
+    grid = []
+    marketing_channel = None
     community_active = False
 
     for chat in chats:
@@ -269,9 +270,15 @@ def build_chats_payload(user) -> dict:
             requirement = chat_access_requirement_text(chat)
             if requirement:
                 item["access_requirement"] = requirement
-        payload.append(item)
+
+        # Карточка «Канал маркетинга» на странице чатов — отдельно от сетки.
+        if chat.title.strip().lower() in {"канал маркетинга", "rerise media", "re:rise media"}:
+            marketing_channel = item
+        else:
+            grid.append(item)
 
     return {
         "community_active": community_active,
-        "chats": payload,
+        "chats": grid,
+        "marketing_channel": marketing_channel,
     }

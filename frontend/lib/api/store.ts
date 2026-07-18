@@ -29,6 +29,22 @@ export async function fetchTokenPacks() {
   return data.packs ?? [];
 }
 
+export async function fetchOrders() {
+  return apiRequest<
+    Array<{
+      id: number;
+      product_name: string;
+      order_type: string;
+      order_type_label: string;
+      amount_usd: number;
+      status: string;
+      status_label: string;
+      created_at: string;
+      paid_at: string | null;
+    }>
+  >("/store/orders");
+}
+
 export async function createOrder(product_id: string, order_type: string) {
   return apiRequest<{
     order_id: number;

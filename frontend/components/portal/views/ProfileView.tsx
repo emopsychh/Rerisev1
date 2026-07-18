@@ -2,23 +2,31 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { AlertTriangle, Bell, Camera, Check, CheckCircle2, ChevronRight, CircleUserRound, ClipboardPaste, Copy, CreditCard, History, Lock, MapPin, Settings, ShieldCheck, ShoppingBag, Smartphone, UserPlus, Users, WalletCards } from "lucide-react";
+import { AlertTriangle, Bell, Camera, CheckCircle2, ChevronRight, CircleUserRound, ClipboardPaste, Copy, CreditCard, History, Lock, MapPin, Settings, ShieldCheck, ShoppingBag, Smartphone, UserPlus, Users, WalletCards } from "lucide-react";
 import { useAuth } from "../../../lib/auth/AuthProvider";
 import { usePortalBackend } from "../../../lib/auth/PortalBackendProvider";
-import { fetchInviteLink, fetchProfile, updateProfile } from "../../../lib/api/me";
+import { fetchInviteLink, fetchProfile, updateNotificationSettings, updateProfile } from "../../../lib/api/me";
+import { fetchOrders } from "../../../lib/api/store";
 import { ApiError } from "../../../lib/api/types";
-import { CURRENT_DEMO_TIER, PARTNER_RANKS, SUBSCRIPTION_RULES } from "../../../lib/marketing-plan";
-import { formatApiDate, maskWalletAddress, PAYOUT_ADDRESS_STORAGE_KEY, tariffDisplayName } from "../../../lib/portal";
+import { formatApiDate, describeCurrentDevice, formatUsd, maskWalletAddress, PAYOUT_ADDRESS_STORAGE_KEY, tariffDisplayName } from "../../../lib/portal";
 import type { NotifyFn, SectionId, TFn } from "../../../lib/portal";
 import { PageShell } from "../shared/PageShell";
 import { PortalDialog } from "../shared/PortalDialog";
 import { PortalLoading } from "../shared/PortalLoading";
 
+type PurchaseRow = {
+  id: number;
+  title: string;
+  price: string;
+  status: string;
+  date: string;
+};
+
 export function ProfileView({ t, notify, setActive, onRenew }: { t: TFn; notify: NotifyFn; setActive: (id: SectionId) => void; onRenew: () => void }) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, refreshMe } = useAuth();
-  const { wallet, home, dashboard, ready } = usePortalBackend();
+  const { wallet, home, dashboard, ready, reload } = usePortalBackend();
   const partnerFromHome = home?.partner_summary;
   const partnerFromDash = dashboard?.partner as {
     tariff_id?: string;
@@ -31,10 +39,13 @@ export function ProfileView({ t, notify, setActive, onRenew }: { t: TFn; notify:
     || (partnerFromHome?.tariff_id || partnerFromDash?.tariff_id
       ? tariffDisplayName(partnerFromHome?.tariff_id || partnerFromDash?.tariff_id)
       : t("Не оформлен"));
-  const rankLabel = partnerFromDash?.current_rank_name || partnerFromHome?.current_rank_name || PARTNER_RANKS[0].name;
+  const rankLabel = partnerFromDash?.current_rank_name || partnerFromHome?.current_rank_name || t("Не присвоен");
   const activityUntil = formatApiDate(partnerFromDash?.activity_until, "—");
   const isActive = partnerFromHome?.is_active ?? partnerFromDash?.is_active ?? false;
+  const currentDevice = describeCurrentDevice();
   const [inviteUrl, setInviteUrl] = useState(user?.public_id ? `rerise.app/join/${user.public_id}` : "rerise.app");
+  const [purchases, setPurchases] = useState<PurchaseRow[]>([]);
+  const [purchasesLoading, setPurchasesLoading] = useState(true);
   const [profileData, setProfileData] = useState({
     name: user?.first_name || "",
     surname: user?.last_name || "",
@@ -52,8 +63,7 @@ export function ProfileView({ t, notify, setActive, onRenew }: { t: TFn; notify:
   const [profileDialog, setProfileDialog] = useState<"data" | "security" | "wallet" | null>(() => (
     profileDialogFromPath?.[1] as "data" | "security" | "wallet" | undefined
   ) ?? null);
-  const [avatarUpdated, setAvatarUpdated] = useState(false);
-  const [notificationSettings, setNotificationSettings] = useState({ email: true, push: false });
+  const [notificationSettings, setNotificationSettings] = useState({ email: true, push: true });
   const profileFields = [
     ["Имя", profileData.name],
     ["Фамилия", profileData.surname],
@@ -72,6 +82,10 @@ export function ProfileView({ t, notify, setActive, onRenew }: { t: TFn; notify:
     setProfileDialog(null);
     router.push("/profile", { scroll: false });
   };
+
+  useEffect(() => {
+    void reload();
+  }, [reload]);
 
   useEffect(() => {
     if (!user) return;
@@ -100,6 +114,12 @@ export function ProfileView({ t, notify, setActive, onRenew }: { t: TFn; notify:
         };
         setProfileData(enriched);
         setProfileDraft(enriched);
+        if (profile.notifications) {
+          setNotificationSettings({
+            email: profile.notifications.email_enabled !== false,
+            push: profile.notifications.push_enabled !== false,
+          });
+        }
       } catch {
         /* keep /me values */
       }
@@ -111,6 +131,33 @@ export function ProfileView({ t, notify, setActive, onRenew }: { t: TFn; notify:
       }
     })();
   }, [user]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setPurchasesLoading(true);
+    void (async () => {
+      try {
+        const orders = await fetchOrders();
+        if (cancelled) return;
+        setPurchases(
+          orders.map((order) => ({
+            id: order.id,
+            title: order.product_name,
+            price: formatUsd(order.amount_usd),
+            status: order.status_label || order.status,
+            date: formatApiDate(order.paid_at || order.created_at),
+          })),
+        );
+      } catch {
+        if (!cancelled) setPurchases([]);
+      } finally {
+        if (!cancelled) setPurchasesLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
 
   useEffect(() => {
     const dialogMatch = pathname.match(/^\/profile\/(data|security|wallet)$/);
@@ -138,6 +185,21 @@ export function ProfileView({ t, notify, setActive, onRenew }: { t: TFn; notify:
     }
   };
 
+  const toggleNotification = async (key: "email" | "push") => {
+    const next = { ...notificationSettings, [key]: !notificationSettings[key] };
+    setNotificationSettings(next);
+    try {
+      await updateNotificationSettings({
+        email_enabled: next.email,
+        push_enabled: next.push,
+      });
+      notify(`${t(key === "email" ? "Email" : "Push")}: ${t("настройки обновлены")}`);
+    } catch (err) {
+      setNotificationSettings(notificationSettings);
+      notify(err instanceof ApiError ? err.message : t("Не удалось сохранить настройки"));
+    }
+  };
+
   if (!ready) {
     return (
       <PageShell>
@@ -152,8 +214,8 @@ export function ProfileView({ t, notify, setActive, onRenew }: { t: TFn; notify:
         <article className="profile-surface">
           <header className="profile-overview">
             <div className="profile-overview-main">
-              <span className="profile-avatar-wrap">
-                <span className={avatarUpdated ? "avatar-photo big updated" : "avatar-photo big"}>{avatarUpdated ? <Check size={24} /> : initials}</span>
+                <span className="profile-avatar-wrap">
+                <span className="avatar-photo big">{initials}</span>
                 <i aria-hidden="true" />
               </span>
               <div className="profile-overview-copy">
@@ -168,8 +230,7 @@ export function ProfileView({ t, notify, setActive, onRenew }: { t: TFn; notify:
             </div>
             <div className="profile-header-actions">
               <button onClick={() => {
-                setAvatarUpdated((updated) => !updated);
-                notify(t("Фото профиля обновлено"));
+                notify(t("Загрузка фото профиля скоро будет доступна"));
               }}><Camera size={17} />{t("Сменить фото")}</button>
               <button onClick={() => {
                 setProfileDraft(profileData);
@@ -253,16 +314,25 @@ export function ProfileView({ t, notify, setActive, onRenew }: { t: TFn; notify:
                   <button onClick={() => setActive("marketplace")}>{t("Открыть Маркет")}</button>
                 </div>
                 <div className="profile-purchase-list">
-                  {[
-                    [CURRENT_DEMO_TIER.name, `$${CURRENT_DEMO_TIER.priceUsd}`, "Тариф оформлен", "24 января"],
-                    ["Продление активности", `$${SUBSCRIPTION_RULES.monthlyPriceUsd}`, "Активность продлена", "5 июля"],
-                  ].map(([title, price, status, date]) => (
-                    <div className="profile-purchase-row" key={title}>
+                  {purchasesLoading ? (
+                    <div className="profile-purchase-row"><div><strong>{t("Загрузка…")}</strong></div></div>
+                  ) : purchases.length ? (
+                    purchases.map((item) => (
+                      <div className="profile-purchase-row" key={item.id}>
+                        <span><ShoppingBag size={17} /></span>
+                        <div><strong>{t(item.title)}</strong><small>{item.date} · {t(item.status)}</small></div>
+                        <b>{item.price}</b>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="profile-purchase-row">
                       <span><ShoppingBag size={17} /></span>
-                      <div><strong>{t(title)}</strong><small>{t(date)} · {t(status)}</small></div>
-                      <b>{price}</b>
+                      <div>
+                        <strong>{t("Покупок пока нет")}</strong>
+                        <small>{t("Оформленные тарифы и продления появятся здесь")}</small>
+                      </div>
                     </div>
-                  ))}
+                  )}
                 </div>
               </section>
             </div>
@@ -293,10 +363,10 @@ export function ProfileView({ t, notify, setActive, onRenew }: { t: TFn; notify:
                   <button onClick={() => openProfileDialog("security")}>{t("Настроить")}</button>
                 </div>
                 <button className="profile-action-row" onClick={() => openProfileDialog("security")}>
-                  <span><Lock size={17} /></span><div><strong>{t("Пароль")}</strong><small>{t("Обновлен 12 дней назад")}</small></div><ChevronRight size={17} />
+                  <span><Lock size={17} /></span><div><strong>{t("Пароль")}</strong><small>{t("Смена пароля скоро будет доступна")}</small></div><ChevronRight size={17} />
                 </button>
                 <button className="profile-action-row" onClick={() => openProfileDialog("security")}>
-                  <span><Smartphone size={17} /></span><div><strong>{t("Активные устройства")}</strong><small>MacBook Pro · iPhone</small></div><ChevronRight size={17} />
+                  <span><Smartphone size={17} /></span><div><strong>{t("Активные устройства")}</strong><small>{currentDevice}</small></div><ChevronRight size={17} />
                 </button>
               </section>
 
@@ -319,8 +389,7 @@ export function ProfileView({ t, notify, setActive, onRenew }: { t: TFn; notify:
                       aria-checked={notificationSettings[key]}
                       key={key}
                       onClick={() => {
-                        setNotificationSettings((settings) => ({ ...settings, [key]: !settings[key] }));
-                        notify(`${t(label)}: ${t("настройки обновлены")}`);
+                        void toggleNotification(key);
                       }}
                     >
                       <div><strong>{t(label)}</strong><span>{t(text)}</span></div>
@@ -411,11 +480,11 @@ export function ProfileView({ t, notify, setActive, onRenew }: { t: TFn; notify:
         <PortalDialog title={t("Безопасность")} eyebrow={t("Защита аккаунта")} onClose={closeProfileDialog} className="security-dialog" closeLabel={t("Закрыть")}>
           <div className="security-options">
             {[
-              ["Пароль", "Обновлён 12 дней назад", Lock],
-              ["Активные устройства", "MacBook Pro · iPhone", Smartphone],
+              ["Пароль", "Смена пароля скоро будет доступна", Lock],
+              ["Активные устройства", currentDevice, Smartphone],
             ].map(([title, meta, OptionIcon]) => {
               const Icon = OptionIcon as typeof Lock;
-              return <button key={title as string} onClick={() => notify(`${t(title as string)}: ${t("настройки открыты")}`)}><Icon size={19} /><div><strong>{t(title as string)}</strong><span>{t(meta as string)}</span></div><ChevronRight size={17} /></button>;
+              return <button key={title as string} onClick={() => notify(`${t(title as string)}: ${t(meta as string)}`)}><Icon size={19} /><div><strong>{t(title as string)}</strong><span>{t(meta as string)}</span></div><ChevronRight size={17} /></button>;
             })}
           </div>
         </PortalDialog>

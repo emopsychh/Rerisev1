@@ -5,8 +5,10 @@ from apps.commerce.models import Order, Product
 from apps.commerce.selectors import (
     get_active_tariff_products,
     get_order_for_user,
+    get_orders_for_user,
     serialize_create_order_response,
     serialize_order_detail,
+    serialize_order_list_item,
     serialize_tariff_product,
     serialize_token_store,
 )
@@ -34,6 +36,10 @@ class TokenStoreView(APIView):
 
 
 class OrderCreateView(APIView):
+    def get(self, request):
+        orders = get_orders_for_user(request.user.id)
+        return success_response([serialize_order_list_item(order) for order in orders])
+
     def post(self, request):
         serializer = CreateOrderSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

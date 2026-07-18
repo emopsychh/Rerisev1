@@ -21,7 +21,7 @@
 | Спринт 5 — Bonus engine | ✅ Готово | 100% |
 | Спринт 6 — Academy | ✅ Готово | 100% |
 | Спринт 7 — Content + Home | ✅ Готово | 100% |
-| Спринт 8 — iBox | ✅ Готово | 100% |
+| Спринт 8 — AI Hub | ✅ Готово | 100% |
 | Спринт 9 — CRM + Dashboard polish | ✅ Готово | 100% |
 | Спринт 10 — CryptoBot + Deploy | ✅ Оплата готова · деплой ⏸ | ~70% |
 | Спринт 11 — Admin + Polish | ✅ Готово | 100% |
@@ -375,7 +375,7 @@
 
 ### API
 
-- `[x]` `GET /api/v1/home` — баннеры, AI Box widget, programs_count
+- `[x]` `GET /api/v1/home` — баннеры, AI Hub widget, programs_count
 - `[x]` `GET /api/v1/materials` (category, search)
 - `[x]` `GET /api/v1/materials/groups/{id}`
 - `[x]` `GET /api/v1/materials/files/{id}/download` → 302
@@ -396,7 +396,7 @@
 
 ---
 
-## Спринт 8 — iBox ✅
+## Спринт 8 — AI Hub ✅
 
 **Критерий:** запустить сценарий → получить ответ → токены списались. **Выполнен** (каркас + MockProvider).
 

@@ -60,4 +60,8 @@ export type Profile = {
     activity_until?: string;
     current_rank_name?: string;
   } | null;
+  notifications?: {
+    email_enabled?: boolean;
+    push_enabled?: boolean;
+  };
 };
