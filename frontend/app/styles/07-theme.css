@@ -2644,20 +2644,25 @@ body {
   color: var(--theme-text-primary);
 }
 
-:root[data-theme="light"] .invite-link-field,
-:root[data-theme="light"] .invite-side {
+:root[data-theme="light"] .invite-dialog {
+  background:
+    radial-gradient(ellipse 55% 70% at 18% 58%, rgba(32, 140, 148, 0.1), transparent 62%),
+    radial-gradient(circle at 92% 8%, rgba(80, 146, 255, 0.06), transparent 280px),
+    var(--theme-surface-1, rgba(252, 254, 254, 0.99));
+}
+
+:root[data-theme="light"] .invite-link-field {
   border-color: var(--theme-border);
   background: var(--theme-surface-2);
 }
 
 :root[data-theme="light"] .invite-main label > span,
 :root[data-theme="light"] .withdraw-amount > span,
-:root[data-theme="light"] .invite-side > p {
+:root[data-theme="light"] .invite-qr-block > p {
   color: var(--theme-text-muted);
 }
 
-:root[data-theme="light"] .invite-link-field strong,
-:root[data-theme="light"] .invite-side > strong {
+:root[data-theme="light"] .invite-link-field strong {
   color: var(--theme-text-primary);
 }
 
@@ -2666,10 +2671,22 @@ body {
   color: var(--theme-text-secondary);
 }
 
+:root[data-theme="light"] .invite-link-field button.is-copied,
+:root[data-theme="light"] .invite-copy-message.is-copied {
+  background: rgba(32, 140, 148, 0.14);
+  color: var(--theme-accent-strong);
+}
+
 :root[data-theme="light"] .invite-copy-message {
   border-color: rgba(32, 140, 148, 0.22);
-  background: var(--theme-accent-soft);
+  background: linear-gradient(135deg, rgba(32, 140, 148, 0.12), rgba(80, 146, 255, 0.06));
   color: var(--theme-accent-strong);
+}
+
+:root[data-theme="light"] .invite-qr {
+  box-shadow:
+    0 16px 36px rgba(44, 65, 70, 0.12),
+    0 0 0 1px rgba(255, 255, 255, 0.9);
 }
 
 :root[data-theme="light"] .mobile-more-sheet {

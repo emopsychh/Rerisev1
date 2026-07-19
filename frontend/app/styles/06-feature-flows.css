@@ -244,17 +244,74 @@
   color: #f7f7f3;
 }
 
-.invite-dialog-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(240px, 280px);
-  gap: 18px;
+.invite-dialog {
+  width: min(680px, calc(100vw - 32px));
+  background:
+    radial-gradient(ellipse 55% 70% at 18% 58%, rgba(143, 214, 223, 0.14), transparent 62%),
+    radial-gradient(circle at 92% 8%, rgba(80, 146, 255, 0.08), transparent 280px),
+    rgba(17, 21, 21, 0.98);
 }
 
-.invite-main,
-.invite-side {
+.invite-layout {
   display: grid;
-  align-content: start;
-  gap: 16px;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 28px 32px;
+}
+
+.invite-qr-block {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  padding: 8px 4px;
+  text-align: center;
+}
+
+.invite-qr-aura {
+  position: absolute;
+  inset: 12% 6% 22%;
+  z-index: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(143, 214, 223, 0.28), transparent 70%);
+  filter: blur(18px);
+  pointer-events: none;
+}
+
+.invite-qr {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 168px;
+  height: 168px;
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.28),
+    0 0 0 1px rgba(255, 255, 255, 0.55);
+  object-fit: contain;
+}
+
+.invite-qr--empty {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
+  box-shadow: none;
+}
+
+.invite-qr-block > p {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  max-width: 11.5rem;
+  color: rgba(247, 247, 243, 0.48);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.invite-main {
+  display: grid;
+  align-content: center;
+  gap: 14px;
+  min-width: 0;
 }
 
 .invite-main label {
@@ -272,19 +329,22 @@
 
 .invite-link-field {
   display: flex;
-  min-height: 54px;
+  min-height: 52px;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.045);
-  padding: 8px 9px 8px 15px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 7px 7px 7px 16px;
 }
 
 .invite-link-field strong {
   overflow: hidden;
-  color: #f7f7f3;
+  color: rgba(247, 247, 243, 0.92);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -296,45 +356,33 @@
   align-items: center;
   justify-content: center;
   gap: 7px;
+  border: 0;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.09);
-  color: rgba(247, 247, 243, 0.84);
-  padding: 0 12px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(247, 247, 243, 0.88);
+  padding: 0 14px;
   font-weight: 600;
+  transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.invite-link-field button:hover,
+.invite-copy-message:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.invite-link-field button.is-copied,
+.invite-copy-message.is-copied {
+  background: rgba(83, 208, 196, 0.2);
+  color: #b7f0ea;
 }
 
 .invite-copy-message {
   width: 100%;
-  min-height: 46px;
-  border: 1px solid rgba(143, 214, 223, 0.18);
-  background: rgba(143, 214, 223, 0.13);
-  color: #a9e5eb;
+  min-height: 48px;
+  border: 1px solid rgba(143, 214, 223, 0.16);
+  background: linear-gradient(135deg, rgba(143, 214, 223, 0.14), rgba(80, 146, 255, 0.08));
+  color: #c5eef2;
 }
-
-.invite-side {
-  justify-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.035);
-  padding: 18px;
-  text-align: center;
-}
-
-.invite-qr {
-  display: block;
-  width: 160px;
-  height: 160px;
-  border-radius: 16px;
-  background: #ffffff;
-  object-fit: contain;
-}
-
-.invite-qr--empty {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.invite-side > strong { color: #f7f7f3; }
-.invite-side > p { margin: -8px 0 0; color: rgba(247, 247, 243, 0.48); font-size: 14px; line-height: 1.45; }
 
 .mobile-more-backdrop {
   display: none;
@@ -764,7 +812,9 @@
   .portal-dialog { width: 100%; max-height: 92vh; border-radius: 26px 26px 0 0; padding: 20px 16px calc(22px + env(safe-area-inset-bottom)); }
   .portal-dialog-head h2 { font-size: 24px; }
   .portal-dialog-actions { display: grid; grid-template-columns: 1fr 1fr; }
-  .invite-dialog-grid, .profile-edit-grid { grid-template-columns: 1fr; }
+  .invite-layout { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+  .invite-main { width: 100%; text-align: left; }
+  .profile-edit-grid { grid-template-columns: 1fr; }
   .invite-side { display: none; }
   .mobile-more-backdrop { display: grid; }
   .mobile-more-sheet > div button { grid-template-columns: 30px minmax(0, 1fr); gap: 8px; padding: 10px; }
