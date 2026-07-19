@@ -36,7 +36,6 @@ import { CourseDetailView } from "./views/CourseDetailView";
 import { CoursesView } from "./views/CoursesView";
 import { CrmView } from "./views/CrmView";
 import { HomeView } from "./views/HomeView";
-import { LaborMarketView } from "./views/LaborMarketView";
 import { LibraryView } from "./views/LibraryView";
 import { MarketplaceView } from "./views/MarketplaceView";
 import { MaterialDetailView } from "./views/MaterialDetailView";
@@ -313,7 +312,6 @@ export function PortalShellInner(props: {
         {!detail && active === "workspace" ? <WorkspaceView t={t} notify={notify} /> : null}
         {!detail && active === "courses" ? <CoursesView openCourse={openCourse} t={t} /> : null}
         {!detail && active === "library" ? <LibraryView openMaterial={openMaterial} t={t} /> : null}
-        {!detail && active === "labor" ? <LaborMarketView t={t} notify={notify} /> : null}
         {!detail && active === "chats" ? <ChatsView t={t} notify={notify} /> : null}
         {!detail && active === "partners" ? <PartnersView t={t} notify={notify} /> : null}
         {!detail && active === "crm" ? <CrmView t={t} notify={notify} /> : null}

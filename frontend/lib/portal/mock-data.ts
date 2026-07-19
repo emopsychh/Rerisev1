@@ -7,7 +7,6 @@ import {
   Camera,
   CircleUserRound,
   FileText,
-  Handshake,
   Home,
   Images,
   Library,
@@ -34,7 +33,6 @@ export const navItems: Array<{ id: SectionId; label: string; icon: typeof Home }
   { id: "wallet", label: "Финансы", icon: WalletCards },
   { id: "workspace", label: "AI Hub", icon: Sparkles },
   { id: "library", label: "Материалы", icon: Library },
-  { id: "labor", label: "Биржа труда", icon: Handshake },
   { id: "chats", label: "Чаты", icon: MessagesSquare },
   { id: "marketplace", label: "Маркет", icon: ShoppingBag },
   { id: "profile", label: "Профиль", icon: CircleUserRound },
@@ -46,7 +44,6 @@ export const mobileLabels: Record<SectionId, string> = {
   workspace: "AI",
   courses: "Академия",
   library: "База",
-  labor: "Биржа",
   chats: "Чаты",
   marketing: "Маркетинг",
   partners: "Команда",
@@ -57,7 +54,7 @@ export const mobileLabels: Record<SectionId, string> = {
 };
 
 export const mobileNavIds: SectionId[] = ["home", "workspace", "marketplace", "profile"];
-export const mobileMoreIds: SectionId[] = ["cabinet", "crm", "wallet", "library", "labor", "chats"];
+export const mobileMoreIds: SectionId[] = ["cabinet", "crm", "wallet", "library", "chats"];
 
 export const courses = [
   {
@@ -325,14 +322,6 @@ export const promoBanners = [
     theme: "academy",
     icon: Bot,
     image: "/assets/portal/home-banner-claude.webp",
-  },
-  {
-    eyebrow: "RE:RISE",
-    title: "Биржа труда",
-    text: "Размещайте портфолио после обучения, находите заказы и первые проекты внутри экосистемы RE:RISE.",
-    theme: "ai",
-    icon: BriefcaseBusiness,
-    image: "/assets/portal/home-banner-labor-market.webp",
   },
   {
     eyebrow: "RE:RISE",

@@ -110,6 +110,11 @@ def build_dashboard(user) -> dict:
     next_rank = next_rank_id(partner.current_rank)
     next_rank_def = RANK_BY_ID.get(next_rank) if next_rank else None
 
+    binary_balance, _ = BinaryBalance.objects.get_or_create(partner=partner)
+    left_pv = binary_balance.left_pv
+    right_pv = binary_balance.right_pv
+    pending_collapse = min(left_pv, right_pv)
+
     fast_start = FastStart.objects.filter(partner=partner).first()
 
     recent_entries = (
@@ -125,6 +130,12 @@ def build_dashboard(user) -> dict:
             "current": week.collapsed_pv,
             "required": next_rank_def["pv"] if next_rank_def else None,
             "next_rank": rank_name(next_rank) if next_rank else None,
+        },
+        "binary_legs": {
+            "left_pv": left_pv,
+            "right_pv": right_pv,
+            "pending_collapse_pv": pending_collapse,
+            "is_frozen": binary_balance.is_frozen,
         },
         "active_personal_partners": {
             "current": active_personals,

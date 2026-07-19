@@ -109,6 +109,13 @@ export function PortalAppContent() {
       return;
     }
 
+    if (matchesRoute(pathname, "/labor")) {
+      setActive("home");
+      setDetail(null);
+      router.replace("/", { scroll: false });
+      return;
+    }
+
     if (pathname === "/market" || pathname === "/market/programs") {
       setActive("marketplace");
       setMarketTab("packages");

@@ -1,4 +1,4 @@
-export type SectionId = "home" | "cabinet" | "workspace" | "courses" | "library" | "labor" | "chats" | "marketing" | "partners" | "crm" | "marketplace" | "wallet" | "profile";
+export type SectionId = "home" | "cabinet" | "workspace" | "courses" | "library" | "chats" | "marketing" | "partners" | "crm" | "marketplace" | "wallet" | "profile";
 export type TFn = (value: string) => string;
 export type NotifyFn = (message: string) => void;
 export type MarketTab = "packages" | "tokens";

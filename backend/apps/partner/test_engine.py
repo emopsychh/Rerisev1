@@ -107,6 +107,26 @@ class PurchaseBonusTests(BonusEngineTestMixin, TestCase):
 
         self.assertEqual(self.sum_entries(sponsor.user, ENTRY_TYPE_PERSONAL_BONUS), Decimal("0"))
 
+    def test_second_personal_defaults_to_opposite_leg_and_collapses(self):
+        from apps.partner.models import BinaryPlacement
+
+        sponsor = self.join("root@t.ai", "rise")
+        first = self.join("left@t.ai", "rise", sponsor_code=self.referral_code(sponsor))
+        second = self.join("right@t.ai", "rise", sponsor_code=self.referral_code(sponsor))
+
+        first_leg = BinaryPlacement.objects.get(partner=first).leg
+        second_leg = BinaryPlacement.objects.get(partner=second).leg
+        self.assertNotEqual(first_leg, second_leg)
+
+        balance = BinaryBalance.objects.get(partner=sponsor)
+        # Both rise purchases → 30 PV each leg → full collapse, no remainder
+        self.assertEqual(balance.left_pv, 0)
+        self.assertEqual(balance.right_pv, 0)
+        self.assertEqual(
+            self.sum_entries(sponsor.user, ENTRY_TYPE_BINARY_COLLAPSE, currency="PV"),
+            Decimal("30"),
+        )
+
 
 class UpgradeRenewalTests(BonusEngineTestMixin, TestCase):
     def setUp(self):

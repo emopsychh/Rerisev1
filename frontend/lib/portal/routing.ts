@@ -10,7 +10,6 @@ export const routeBySection: Partial<Record<SectionId, string>> = {
   library: "/materials",
   marketplace: "/market/packages",
   profile: "/profile",
-  labor: "/labor",
   chats: "/chats",
   marketing: "/chats",
 };
@@ -21,7 +20,6 @@ export const sectionIds = new Set<SectionId>([
   "workspace",
   "courses",
   "library",
-  "labor",
   "chats",
   "marketing",
   "partners",
@@ -66,7 +64,6 @@ export function sectionFromPathname(pathname: string): SectionId | null {
   if (matchesRoute(pathname, "/marketing")) return "chats";
   if (matchesRoute(pathname, "/market")) return "marketplace";
   if (matchesRoute(pathname, "/profile")) return "profile";
-  if (matchesRoute(pathname, "/labor")) return "labor";
   if (matchesRoute(pathname, "/chats")) return "chats";
   return null;
 }
@@ -101,7 +98,6 @@ export function pageTitle(active: SectionId, t: TFn) {
     workspace: "AI Hub",
     courses: "Академия",
     library: "Материалы",
-    labor: "Биржа труда",
     chats: "Чаты",
     marketing: "Канал маркетинга",
     partners: "Команда",

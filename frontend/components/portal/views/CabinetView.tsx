@@ -24,6 +24,7 @@ export function CabinetView({ setActive, t, notify, onInvite, onOpenRanks }: { s
   } | undefined;
   const metrics = dashboard?.metrics as {
     weekly_collapsed_pv?: { current?: number; required?: number; next_rank?: string };
+    binary_legs?: { left_pv?: number; right_pv?: number; pending_collapse_pv?: number };
     active_personal_partners?: { current?: number; required?: number };
     fast_start?: { current?: number; required?: number; reward_usd?: number; reward_paid?: boolean };
     available_to_withdraw?: { amount_usd?: number };
@@ -35,6 +36,8 @@ export function CabinetView({ setActive, t, notify, onInvite, onOpenRanks }: { s
   } | undefined;
   const weeklyCollapsedPv = Number(metrics?.weekly_collapsed_pv?.current ?? 0);
   const nextRankRequired = Number(metrics?.weekly_collapsed_pv?.required ?? 0);
+  const leftPv = Number(metrics?.binary_legs?.left_pv ?? 0);
+  const rightPv = Number(metrics?.binary_legs?.right_pv ?? 0);
   const personalCurrent = Number(metrics?.active_personal_partners?.current ?? 0);
   const personalRequired = Number(metrics?.active_personal_partners?.required ?? 0);
   const personalProgress = personalRequired > 0
@@ -163,12 +166,14 @@ export function CabinetView({ setActive, t, notify, onInvite, onOpenRanks }: { s
           <div className="cabinet-rank-main">
             <div className="cabinet-rank-metrics">
               <div className="cabinet-rank-metric">
-                <span>{t("Недельный объём")}</span>
+                <span>{t("Схлоп за неделю")}</span>
                 <strong>{weeklyCollapsedPv} / {nextRankRequired || "—"} <small>PV</small></strong>
                 <i><b style={{ width: `${rankProgress}%` }} /></i>
                 <small>
                   {nextRankRequired > 0
-                    ? `${t("Осталось")} ${Math.max(0, nextRankRequired - weeklyCollapsedPv)} PV`
+                    ? leftPv + rightPv > 0 && weeklyCollapsedPv === 0
+                      ? `${t("В ногах")}: L ${leftPv} · R ${rightPv} PV · ${t("схлоп при объёме в обеих")}`
+                      : `${t("Осталось")} ${Math.max(0, nextRankRequired - weeklyCollapsedPv)} PV`
                     : t("Нет следующей ступени")}
                 </small>
               </div>

@@ -6,9 +6,9 @@ from django.utils import timezone
 from apps.commerce.selectors import get_user_subscription
 from apps.partner.constants import (
     DEFAULT_RANK,
-    DEFAULT_SECOND_PERSONAL_LEG,
     FIRST_PERSONAL_INVITE_COUNT,
     LEG_LEFT,
+    LEG_RIGHT,
 )
 from apps.partner.models import BinaryBalance, BinaryPlacement, PartnerProfile, SponsorLink
 from apps.partner.selectors import get_sponsor_partner
@@ -111,10 +111,17 @@ class BinaryPlacementService:
 
     @staticmethod
     def _resolve_leg(sponsor: PartnerProfile, leg: str | None) -> str:
+        """
+        1-й личный → внешняя нога пригласившего (как у него у аплайна).
+        Со 2-го → явный выбор left/right, иначе противоположная нога.
+        """
+        outer_leg = sponsor.binary_placement.leg or LEG_LEFT
         personal_count = SponsorLink.objects.filter(sponsor=sponsor).count()
         if personal_count <= FIRST_PERSONAL_INVITE_COUNT:
-            return sponsor.binary_placement.leg
-        return leg or DEFAULT_SECOND_PERSONAL_LEG
+            return outer_leg
+        if leg in (LEG_LEFT, LEG_RIGHT):
+            return leg
+        return LEG_RIGHT if outer_leg == LEG_LEFT else LEG_LEFT
 
     @staticmethod
     def _find_first_free_slot(
