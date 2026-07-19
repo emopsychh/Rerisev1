@@ -1,3 +1,5 @@
+/* Dark theme tokens and shared interaction semantics. */
+
 :root {
   color-scheme: dark;
   --nav: #15191d;
@@ -57,44 +59,6 @@
   --theme-backdrop-blur: blur(24px) saturate(1.2);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 :where(button, a, input, textarea, select, [role="button"], [tabindex]):focus-visible {
   outline: 2px solid var(--theme-focus);
   outline-offset: 3px;
@@ -108,482 +72,16 @@
   opacity: 0.72;
 }
 
-
-
 html,
 body {
   background-color: var(--theme-canvas);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* Reusable light surfaces. */
-
-
-
-
-
-
-/* Home, Academy, AI workspace, materials and detail screens. */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* Cabinet, partner structure and CRM. */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+.topbar-actions :where(.language-switcher, .bell-button) {
+  border-color: rgba(255, 255, 255, 0.14);
+}
 
 /* CRM pipeline: lightweight stages with compact glass headers. */
-
-
 .crm-column {
   gap: 0;
   border-radius: 0;
@@ -674,464 +172,22 @@ body {
   left: 0;
   width: 2px;
   border-radius: 999px;
-  background: linear-gradient(180deg, transparent, var(--crm-stage-line, var(--crm-stage-edge)) 24%, var(--crm-stage-line, var(--crm-stage-edge)) 76%, transparent);
+  background: linear-gradient(
+    180deg,
+    transparent,
+    var(--crm-stage-line, var(--crm-stage-edge)) 24%,
+    var(--crm-stage-line, var(--crm-stage-edge)) 76%,
+    transparent
+  );
   opacity: 0.78;
   content: "";
   pointer-events: none;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* Marketplace, packages, wallet and profile. */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* Overlays, popovers, dialogs, forms and transactional states. */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* Labor market, community spaces and marketing channel. */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* The marketing hero remains an intentional inverse, branded media surface. */
-
-
-
-
-
-/* Tablet navigation and late-added ecosystem layouts. */
-@media (max-width: 1080px){
+@media (max-width: 1080px) {
   .mobile-more-backdrop {
     display: grid;
   }
-
-  
 
   .labor-toolbar {
     grid-template-columns: 1fr;
@@ -1152,14 +208,14 @@ body {
   }
 }
 
-@media (max-width: 760px){
+@media (max-width: 760px) {
   .labor-metrics > button {
     grid-column: 1 / -1;
     min-height: 50px;
   }
 
   .labor-project-grid,
-.chat-space-grid {
+  .chat-space-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1185,7 +241,7 @@ body {
  * Desktop portal frame: the sidebar and topbar share one viewport coordinate
  * system. Page layouts may size their own content, but cannot move navigation.
  */
-@media (min-width: 1081px){
+@media (min-width: 1081px) {
   :root {
     --topbar-fixed-height: 70px;
     --topbar-content-gap: 26px;
@@ -1213,9 +269,7 @@ body {
   }
 }
 
-@media (prefers-reduced-motion: reduce){
-  
-
+@media (prefers-reduced-motion: reduce) {
   :where(.promo-banner-image, .promo-banner-copy, .banner-art, .portal-toast, .partner-card-aura::before) {
     animation: none !important;
   }
@@ -1225,19 +279,59 @@ body {
   }
 }
 
-@media (max-width: 900px){
-  .rank-dialog-layout { grid-template-columns: 1fr; }
-  .rank-detail-card { position: static; }
+@media (max-width: 900px) {
+  .rank-dialog-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .rank-detail-card {
+    position: static;
+  }
 }
 
-@media (max-width: 620px){
-  .renewal-summary { grid-template-columns: 48px minmax(0,1fr); }
-  .renewal-plan-icon { width: 48px; height: 48px; border-radius: 15px; }
-  .renewal-price { grid-column: 1 / -1; grid-template-columns: auto auto; align-items: baseline; justify-content: space-between; justify-items: start; border-top: 1px solid rgba(255,255,255,.07); padding-top: 12px; }
-  .renewal-includes { grid-template-columns: 1fr; }
-  .rank-dialog-summary { grid-template-columns: 1fr 1fr; }
-  .rank-summary-line { grid-column: 1 / -1; grid-row: 2; }
-  .rank-dialog-summary > div:last-child { justify-items: end; }
-  .rank-family > div { grid-template-columns: 1fr; }
-  .rank-family button { min-height: 48px; }
+@media (max-width: 620px) {
+  .renewal-summary {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+
+  .renewal-plan-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 15px;
+  }
+
+  .renewal-price {
+    grid-column: 1 / -1;
+    grid-template-columns: auto auto;
+    align-items: baseline;
+    justify-content: space-between;
+    justify-items: start;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    padding-top: 12px;
+  }
+
+  .renewal-includes {
+    grid-template-columns: 1fr;
+  }
+
+  .rank-dialog-summary {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .rank-summary-line {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .rank-dialog-summary > div:last-child {
+    justify-items: end;
+  }
+
+  .rank-family > div {
+    grid-template-columns: 1fr;
+  }
+
+  .rank-family button {
+    min-height: 48px;
+  }
 }
