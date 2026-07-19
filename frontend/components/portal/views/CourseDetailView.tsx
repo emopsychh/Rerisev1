@@ -104,6 +104,7 @@ export function CourseDetailView({
   const [lessonDetail, setLessonDetail] = useState<LessonDetail | null>(null);
   const [lessonLoading, setLessonLoading] = useState(false);
   const [completing, setCompleting] = useState(false);
+  const [videoFailed, setVideoFailed] = useState(false);
   const expandedInitialized = useRef(false);
   const lessonRequestId = useRef(0);
 
@@ -205,6 +206,7 @@ export function CourseDetailView({
       setActiveLessonId(null);
       setLessonDetail(null);
       setLessonLoading(false);
+      setVideoFailed(false);
       return;
     }
     const lessonId = Number(lessonMatch[1]);
@@ -217,6 +219,7 @@ export function CourseDetailView({
     const requestId = ++lessonRequestId.current;
     let cancelled = false;
     setLessonLoading(true);
+    setVideoFailed(false);
     void (async () => {
       try {
         await startLesson(activeLessonId).catch(() => null);
@@ -480,7 +483,7 @@ export function CourseDetailView({
               </div>
             ) : (
               <div className="lesson-preview-player">
-                {lessonDetail?.video?.url ? (
+                {lessonDetail?.video?.url && !videoFailed ? (
                   <video
                     key={lessonDetail.video.url}
                     className="lesson-video"
@@ -489,6 +492,7 @@ export function CourseDetailView({
                     playsInline
                     preload="metadata"
                     src={resolveMediaUrl(lessonDetail.video.url)}
+                    onError={() => setVideoFailed(true)}
                   >
                     {t("Ваш браузер не поддерживает видео")}
                   </video>
@@ -496,9 +500,15 @@ export function CourseDetailView({
                   <>
                     <div><Play size={34} /></div>
                     <span>
-                      {durationLabel(lessonDetail?.duration_minutes || activeListLesson?.duration_minutes || 0)}
-                      {" · "}
-                      {t("Видео пока не добавлено")}
+                      {videoFailed
+                        ? t("Видео не найдено на сервере. Загрузите файл заново в админке урока.")
+                        : (
+                          <>
+                            {durationLabel(lessonDetail?.duration_minutes || activeListLesson?.duration_minutes || 0)}
+                            {" · "}
+                            {t("Видео пока не добавлено")}
+                          </>
+                        )}
                     </span>
                   </>
                 )}

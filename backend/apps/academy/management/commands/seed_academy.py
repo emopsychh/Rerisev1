@@ -181,23 +181,44 @@ class Command(BaseCommand):
                 )
 
                 for lesson_data in lessons_data:
+                    defaults = {
+                        "title": lesson_data["title"],
+                        "description": lesson_data.get("description", ""),
+                        "result_description": lesson_data.get("result_description", ""),
+                        "duration_minutes": lesson_data.get("duration_minutes"),
+                        "video_quality": "HD",
+                        "lesson_type": LESSON_TYPE_VIDEO,
+                        "is_published": True,
+                    }
+                    # video_url только при создании или если в сиде явно задан рабочий URL.
+                    # Иначе не затираем загруженный через админку файл / ссылку.
+                    explicit_video = lesson_data.get("video_url")
+                    if explicit_video:
+                        defaults["video_url"] = explicit_video
+
                     lesson, lesson_created = Lesson.objects.update_or_create(
                         module=module,
                         sort_order=lesson_data["sort_order"],
-                        defaults={
-                            "title": lesson_data["title"],
-                            "description": lesson_data.get("description", ""),
-                            "result_description": lesson_data.get("result_description", ""),
-                            "duration_minutes": lesson_data.get("duration_minutes"),
-                            "video_url": lesson_data.get(
-                                "video_url",
-                                f"/media/lessons/{program.slug}-{module.sort_order}-{lesson_data['sort_order']}.mp4",
-                            ),
-                            "video_quality": "HD",
-                            "lesson_type": LESSON_TYPE_VIDEO,
-                            "is_published": True,
-                        },
+                        defaults=defaults,
                     )
+                    if lesson_created and not explicit_video:
+                        # Раньше сюда писали фейковый /media/… — больше не пишем.
+                        Lesson.objects.filter(pk=lesson.pk).update(video_url="")
+                        lesson.video_url = ""
+                    elif (
+                        not lesson_created
+                        and not lesson.video_file
+                        and (lesson.video_url or "").startswith("/media/")
+                    ):
+                        from pathlib import Path
+
+                        from django.conf import settings
+
+                        relative = lesson.video_url[len("/media/") :].lstrip("/")
+                        if not (Path(settings.MEDIA_ROOT) / relative).is_file():
+                            Lesson.objects.filter(pk=lesson.pk).update(video_url="")
+                            lesson.video_url = ""
+
                     if lesson_created and module.sort_order == 0 and lesson.sort_order == 1:
                         LessonResource.objects.get_or_create(
                             lesson=lesson,

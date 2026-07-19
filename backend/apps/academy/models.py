@@ -207,17 +207,38 @@ class Lesson(models.Model):
 
     @property
     def resolved_video_url(self) -> str | None:
-        """Публичный URL для плеера. Файл имеет приоритет над ручной ссылкой."""
+        """Публичный URL для плеера. Файл имеет приоритет; битые /media/ пути не отдаём."""
         if self.video_file:
-            url = self.video_file.url or ""
-            if not url:
-                return None
-            # FileField.url обычно "/media/lessons/…"; нормализуем на всякий случай.
-            if url.startswith(("http://", "https://")):
-                return url
-            return url if url.startswith("/") else f"/{url}"
+            try:
+                if self.video_file.name and self.video_file.storage.exists(self.video_file.name):
+                    url = self.video_file.url or ""
+                    if url.startswith(("http://", "https://")):
+                        return url
+                    if url:
+                        return url if url.startswith("/") else f"/{url}"
+            except Exception:
+                pass
+
         url = (self.video_url or "").strip()
-        return url or None
+        if not url:
+            return None
+        if url.startswith(("http://", "https://")):
+            return url
+
+        # Локальный путь вида /media/lessons/….mp4 — только если файл реально есть.
+        media_prefix = "/media/"
+        if url.startswith(media_prefix):
+            from pathlib import Path
+
+            from django.conf import settings
+
+            relative = url[len(media_prefix) :].lstrip("/")
+            full = Path(settings.MEDIA_ROOT) / relative
+            if full.is_file():
+                return url if url.startswith("/") else f"/{url}"
+            return None
+
+        return url
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)

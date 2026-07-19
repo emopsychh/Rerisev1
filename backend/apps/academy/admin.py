@@ -1,4 +1,4 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 
 from core.admin import ModelAdmin, StackedInline, TabularInline
 from apps.academy.models import (
@@ -22,11 +22,11 @@ class NestedLessonInline(TabularInline):
         "sort_order",
         "title",
         "duration_minutes",
-        "video_file",
         "video_url",
         "is_published",
     )
     show_change_link = True
+    # video_file только на странице урока: вложенные inline часто не сохраняют FileField.
 
 
 class ModuleInline(StackedInline):
@@ -105,12 +105,12 @@ class LessonInline(TabularInline):
         "title",
         "lesson_type",
         "duration_minutes",
-        "video_file",
         "video_url",
         "video_quality",
         "is_published",
     )
     show_change_link = True
+    # Загрузка файла — только на странице «Уроки» (show_change_link).
 
 
 @admin.register(Module)
@@ -140,7 +140,8 @@ class LessonResourceInline(TabularInline):
 @admin.register(Lesson)
 class LessonAdmin(ModelAdmin):
     section_description = (
-        "Урок = название + ссылка на видео. Без video URL плеер в кабинете будет пустым."
+        "Чтобы видео появилось в кабинете: откройте урок → «Файл видео» → загрузите mp4 → Сохранить. "
+        "Не вставляйте путь /media/... вручную, если файла ещё нет на сервере."
     )
     list_display = (
         "title",
@@ -161,9 +162,10 @@ class LessonAdmin(ModelAdmin):
             {
                 "fields": ("video_file", "video_url", "video_quality"),
                 "description": (
-                    "Удобнее загрузить mp4 в «Файл видео» — он попадёт в /media/lessons/ "
-                    "и ссылка подставится сама. Имя файла лучше латиницей без пробелов. "
-                    "Файл важнее ручной ссылки. "
+                    "1) Загрузите mp4/webm в «Файл видео» и нажмите Сохранить. "
+                    "Ссылка /media/lessons/… подставится сама. "
+                    "2) Либо вставьте прямую https-ссылку на mp4. "
+                    "Имя файла — латиницей без пробелов. "
                     "Тест: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
                 ),
             },
@@ -179,6 +181,14 @@ class LessonAdmin(ModelAdmin):
         super().save_model(request, obj, form, change)
         ProgramCatalogService.refresh_module_lesson_count(obj.module)
         ProgramCatalogService.refresh_counts(obj.module.program)
+        if obj.resolved_video_url:
+            self.message_user(request, f"Видео доступно: {obj.resolved_video_url}")
+        elif obj.video_file or obj.video_url:
+            self.message_user(
+                request,
+                "Файл/ссылка указаны, но видео недоступно (файл не найден на диске или ссылка битая).",
+                level=messages.WARNING,
+            )
 
 
 @admin.register(UserProgress)
