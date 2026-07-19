@@ -1162,15 +1162,26 @@ body {
   color: var(--theme-text-primary);
 }
 
-:root[data-theme="light"] :where(.lesson-list, .material-file-list) button {
+:root[data-theme="light"] :where(.lesson-list button, .material-file-list .material-file-open) {
   border-color: var(--theme-border-subtle);
   background: var(--theme-surface-2);
   color: var(--theme-text-primary);
 }
 
-:root[data-theme="light"] :where(.lesson-list, .material-file-list) button:hover {
+:root[data-theme="light"] :where(.lesson-list button, .material-file-list .material-file-open):hover {
   border-color: var(--theme-border);
   background: var(--theme-surface-hover);
+}
+
+:root[data-theme="light"] .material-file-list .material-file-download {
+  border-color: var(--theme-border-subtle);
+  background: var(--theme-surface-2);
+  color: var(--theme-accent-strong);
+}
+
+:root[data-theme="light"] .material-file-list .material-file-download:hover {
+  border-color: var(--theme-border);
+  background: var(--theme-accent-soft);
 }
 
 :root[data-theme="light"] .course-module {
@@ -1309,7 +1320,7 @@ body {
   color: var(--theme-accent-strong);
 }
 
-:root[data-theme="light"] :where(.lesson-list, .material-file-list) button > span {
+:root[data-theme="light"] :where(.lesson-list button, .material-file-list .material-file-open) > span {
   background: rgba(255, 255, 255, 0.72);
   color: var(--theme-text-secondary);
 }

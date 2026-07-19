@@ -6,7 +6,7 @@ import { BookOpen, Check, CheckCircle2, ChevronDown, Grid2X2, Lock, Play, Shield
 import { completeLesson, fetchLesson, fetchProgram, startLesson } from "../../../lib/api/academy";
 import { ApiError } from "../../../lib/api/types";
 import { usePortalBackend } from "../../../lib/auth/PortalBackendProvider";
-import { mapApiProgramToCourse, sectionIds } from "../../../lib/portal";
+import { mapApiProgramToCourse, sectionIds, tariffDisplayName } from "../../../lib/portal";
 import type { NotifyFn, SectionId, TFn } from "../../../lib/portal";
 import { PortalDialog } from "../shared/PortalDialog";
 import { PortalLoading } from "../shared/PortalLoading";
@@ -305,6 +305,7 @@ export function CourseDetailView({
   }
 
   const locked = program.access_status === "locked";
+  const requiredName = tariffDisplayName(program.required_tariff);
 
   if (locked) {
     return (
@@ -315,7 +316,7 @@ export function CourseDetailView({
             <h2>{t(program.title)}</h2>
             <p>{t(program.description || "")}</p>
             <div className="detail-hero-facts">
-              <span><Lock size={15} />{t("Закрыто")}</span>
+              <span><Lock size={15} />{requiredName ? t(`Нужен ${requiredName}`) : t("Закрыто")}</span>
               <span><BookOpen size={15} />{program.module_count} {t("модулей")}</span>
               <span><Play size={15} />{program.lesson_count} {t("уроков")}</span>
             </div>
@@ -327,11 +328,15 @@ export function CourseDetailView({
         <section className="detail-list-card">
           <div className="materials-empty">
             <Lock size={28} />
-            <strong>{t("Нужен партнёрский тариф")}</strong>
-            <span>{t("Модули и уроки откроются после покупки тарифа с доступом к этой программе.")}</span>
+            <strong>{requiredName ? t(`Нужен тариф ${requiredName}`) : t("Нужен партнёрский тариф")}</strong>
+            <span>
+              {requiredName
+                ? t(`Модули и уроки откроются после покупки тарифа ${requiredName} или выше.`)
+                : t("Модули и уроки откроются после покупки тарифа с доступом к этой программе.")}
+            </span>
             <button type="button" onClick={() => router.push("/market/packages")}>
               <ShoppingBag size={16} />
-              {t("Выбрать тариф")}
+              {requiredName ? t(`Выбрать ${requiredName}`) : t("Выбрать тариф")}
             </button>
           </div>
         </section>

@@ -11,6 +11,7 @@ import {
   mapApiProgramToCourse,
   promoBanners,
   routeSlug,
+  tariffDisplayName,
 } from "../../../lib/portal";
 import type { NotifyFn, SectionId, TFn } from "../../../lib/portal";
 import { PortalDialog } from "../shared/PortalDialog";
@@ -71,6 +72,7 @@ export function HomeView({ setActive, openCourse, openAiHub, t, notify }: { setA
           course: mapped,
           hasAccess,
           accessStatus,
+          requiredTariff: mapped.requiredTariff,
         };
       })
     : [];
@@ -332,6 +334,7 @@ export type HomeProgramItem = {
   course?: ReturnType<typeof mapApiProgramToCourse>;
   hasAccess: boolean;
   accessStatus?: string;
+  requiredTariff?: string | null;
 };
 
 export function HomeProgramCard({ program, onOpen, onBuy, t }: { program: HomeProgramItem; onOpen: () => void; onBuy: () => void; t: TFn }) {
@@ -340,6 +343,7 @@ export function HomeProgramCard({ program, onOpen, onBuy, t }: { program: HomePr
   const lessons = program.course?.lessons ?? 0;
   const completedLessons = Math.round((lessons * progress) / 100);
   const hasSingleLineTitle = program.title === "Партнерские продажи";
+  const requiredName = tariffDisplayName(program.requiredTariff || program.course?.requiredTariff);
 
   return (
     <article className={`course-card ${program.color} ${program.hasAccess ? "program-owned" : "program-for-sale"} ${hasSingleLineTitle ? "program-single-line-title" : ""}`}>
@@ -357,7 +361,7 @@ export function HomeProgramCard({ program, onOpen, onBuy, t }: { program: HomePr
           <div className="course-topline commercial">
             <div className="course-commercial-tags">
               {program.badge ? <em>{program.badge}</em> : null}
-              <span>{t("Нужен тариф")}</span>
+              <span>{requiredName ? t(`Нужен ${requiredName}`) : t("Нужен тариф")}</span>
             </div>
           </div>
         )}
@@ -373,8 +377,14 @@ export function HomeProgramCard({ program, onOpen, onBuy, t }: { program: HomePr
           </div>
         ) : (
           <div className="course-bottom program-purchase-bottom">
-            <div className="program-card-price"><strong>{t("Закрыто")}</strong></div>
-            <button type="button" onClick={onBuy}>{t("Выбрать тариф")}<ArrowUpRight size={15} /></button>
+            <div className="program-card-price">
+              <strong>{t("Закрыто")}</strong>
+              {requiredName ? <small>{t(`Минимальный тариф: ${requiredName}`)}</small> : null}
+            </div>
+            <button type="button" onClick={onBuy}>
+              {requiredName ? t(`Выбрать ${requiredName}`) : t("Выбрать тариф")}
+              <ArrowUpRight size={15} />
+            </button>
           </div>
         )}
       </div>

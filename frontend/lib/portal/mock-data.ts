@@ -160,14 +160,13 @@ export const accessPackages = PARTNER_TIERS.map((tier, index) => ({
   eyebrow: index === 0 ? "Входной тариф" : index === 1 ? "Расширенный тариф" : "Максимальный тариф",
   text: `Партнёрский тариф с физической PV-глубиной ${tier.binaryDepth} уровней и матчингом на ${tier.matchingLines} спонсорских линиях.`,
   price: `$${tier.priceUsd}`,
-  pv: `до ${tier.purchasePvCap} PV активному получателю`,
+  pv: `${tier.binaryDepth} ур. бинар`,
   note: tier.quickStartEligible
     ? `${QUICK_START_RULES.requiredPersonalPartners} личных Pro/Max · ${QUICK_START_RULES.windowDays} дней с первой покупки · $${QUICK_START_RULES.rewardUsd}`
     : "Первый месяц партнёрской активности включён",
   highlight: index === 1,
   features: [
-    `Личный бонус прямому пригласившему: до $${tier.personalBonusCapUsd}`,
-    `PV активному вышестоящему: до ${tier.purchasePvCap}`,
+    `Личный бонус с приглашённых: до $${tier.personalBonusCapUsd}`,
     `Бинарная глубина: ${tier.binaryDepth} уровней`,
     `Матчинг: 10% · ${tier.matchingLines} ${tier.matchingLines === 1 ? "линия" : "линии"}`,
   ],

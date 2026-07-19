@@ -23,6 +23,7 @@ class AcademyAPITestCase(AuthStoreTestMixin, TestCase):
         self.assertEqual(programs["gpt-new"]["access_status"], "owned")
         self.assertEqual(programs["ai-design"]["access_status"], "owned")
         self.assertEqual(programs["ai-video"]["access_status"], "locked")
+        self.assertEqual(programs["ai-video"].get("required_tariff"), "rise-pro-max")
 
     def test_program_detail_with_modules(self):
         response = self.client.get("/api/v1/programs/gpt-new")

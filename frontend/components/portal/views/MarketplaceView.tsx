@@ -54,23 +54,25 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
 
   const apiPackages = tariffs.map((item) => {
     const terms = (item.terms as Record<string, unknown> | undefined) || {};
-    const purchasePv = Number(terms.purchase_pv_cap ?? item.purchase_pv_cap ?? 0);
+    const personalBonus = Number(terms.personal_bonus_cap_usd ?? item.personal_bonus_cap_usd ?? 0);
     const binaryDepth = Number(terms.binary_depth ?? item.binary_depth ?? 0);
     const matchingLines = Number(terms.matching_lines ?? item.matching_lines ?? 0);
     const included = Array.isArray(item.included) ? item.included.map(String) : [];
+    const matchingLabel = matchingLines === 1 ? "линия" : matchingLines < 5 ? "линии" : "линий";
     return {
       title: String(item.name || item.id),
       productId: String(item.id),
       price: `$${Number(item.price_usd || 0)}`,
       priceUsd: Number(item.price_usd || 0),
-      pv: `${purchasePv} PV`,
+      // Не показываем «N PV» как привилегию покупателя — объём покупки идёт в сеть выше.
+      pv: `${binaryDepth} ур. бинар`,
       text: String(item.description || ""),
       eyebrow: "RE:RISE",
-      note: included[0] || String(item.quick_start || `${purchasePv} PV`),
+      note: included[0] || String(item.quick_start || "Первый месяц партнёрской активности включён"),
       features: [
-        `Лимит PV: ${purchasePv}`,
-        `Глубина бинара: ${binaryDepth}`,
-        `Линий матчинга: ${matchingLines}`,
+        `Личный бонус с приглашённых: до $${personalBonus}`,
+        `Глубина бинара: ${binaryDepth} уровней`,
+        `Матчинг: 10% · ${matchingLines} ${matchingLabel}`,
         ...included.slice(1),
       ],
       highlight: String(item.id).includes("pro") && !String(item.id).includes("max"),

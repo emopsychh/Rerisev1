@@ -177,6 +177,7 @@ def serialize_program_card(
         "tags": program.tags or [],
         "access_status": access_status,
         "action": action,
+        "required_tariff": program.required_tariff,
     }
 
     if access_status == ACCESS_LOCKED:

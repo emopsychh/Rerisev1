@@ -1,7 +1,7 @@
 "use client";
 
 import { Lock, Play, ShoppingBag } from "lucide-react";
-import type { TFn } from "../../../lib/portal";
+import { tariffDisplayName, type TFn } from "../../../lib/portal";
 
 type CourseCardData = {
   slug?: string;
@@ -32,8 +32,9 @@ export function CourseCard({
   const isStarted = hasAccess && course.progress > 0;
   const isCompleted = hasAccess && course.progress >= 100;
   const completedLessons = Math.round((course.lessons * course.progress) / 100);
+  const requiredName = tariffDisplayName(course.requiredTariff);
   const statusLabel = !hasAccess
-    ? t("Нужен тариф")
+    ? (requiredName ? t(`Нужен ${requiredName}`) : t("Нужен тариф"))
     : isCompleted
       ? t("Завершено")
       : isStarted
@@ -79,10 +80,14 @@ export function CourseCard({
           <div className="course-bottom program-purchase-bottom">
             <div className="program-card-price">
               <strong>{t("Закрыто")}</strong>
-              <small>{t("Доступ после покупки партнёрского тарифа")}</small>
+              <small>
+                {requiredName
+                  ? t(`Минимальный тариф: ${requiredName}`)
+                  : t("Доступ после покупки партнёрского тарифа")}
+              </small>
             </div>
             <button type="button" onClick={onUnlock ?? onOpen}>
-              {t("Выбрать тариф")}
+              {requiredName ? t(`Выбрать ${requiredName}`) : t("Выбрать тариф")}
               <ShoppingBag size={15} />
             </button>
           </div>

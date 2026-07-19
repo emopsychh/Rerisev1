@@ -31,10 +31,31 @@ type MaterialFileRow = {
   file_size: number;
 };
 
-async function openMaterialDownload(file: MaterialFileRow, notify: NotifyFn, t: TFn) {
+function guessExtension(file: MaterialFileRow): string {
+  const format = (file.format || "").toLowerCase();
+  if (format.includes("pdf")) return ".pdf";
+  if (format.includes("doc")) return ".docx";
+  if (format.includes("xls")) return ".xlsx";
+  if (format.includes("ppt")) return ".pptx";
+  if (format.includes("zip")) return ".zip";
+  if (format.includes("png")) return ".png";
+  if (format.includes("jpg") || format.includes("jpeg")) return ".jpg";
+  const fromUrl = file.file_url?.match(/\.([a-z0-9]+)(?:\?|$)/i);
+  if (fromUrl) return `.${fromUrl[1].toLowerCase()}`;
+  return "";
+}
+
+function downloadFileName(file: MaterialFileRow): string {
+  const base = (file.title || `file-${file.id}`).replace(/[\\/:*?"<>|]+/g, "_").trim();
+  const ext = guessExtension(file);
+  if (!ext) return base;
+  return base.toLowerCase().endsWith(ext) ? base : `${base}${ext}`;
+}
+
+async function openMaterialDownload(file: MaterialFileRow, notify: NotifyFn, t: TFn): Promise<boolean> {
   if (file.file_url && /^https?:\/\//i.test(file.file_url)) {
     window.open(file.file_url, "_blank", "noopener,noreferrer");
-    return;
+    return true;
   }
   try {
     const token = getAccessToken();
@@ -44,17 +65,44 @@ async function openMaterialDownload(file: MaterialFileRow, notify: NotifyFn, t: 
     });
     if (!response.ok) {
       notify(t("Не удалось скачать файл"));
-      return;
+      return false;
     }
     const blob = await response.blob();
     const objectUrl = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = objectUrl;
-    link.download = file.title || `file-${file.id}`;
+    link.download = downloadFileName(file);
+    document.body.appendChild(link);
     link.click();
+    link.remove();
     URL.revokeObjectURL(objectUrl);
+    return true;
   } catch {
     notify(t("Не удалось скачать файл"));
+    return false;
+  }
+}
+
+async function downloadAllMaterials(files: MaterialFileRow[], notify: NotifyFn, t: TFn) {
+  if (!files.length) return;
+  if (files.length === 1) {
+    await openMaterialDownload(files[0], notify, t);
+    return;
+  }
+
+  let ok = 0;
+  for (let index = 0; index < files.length; index += 1) {
+    const success = await openMaterialDownload(files[index], notify, t);
+    if (success) ok += 1;
+    // Пауза, чтобы браузер не блокировал пачку загрузок.
+    if (index < files.length - 1) {
+      await new Promise((resolve) => window.setTimeout(resolve, 450));
+    }
+  }
+  if (ok === files.length) {
+    notify(t(`Скачано файлов: ${ok}`));
+  } else if (ok > 0) {
+    notify(t(`Скачано ${ok} из ${files.length}. Остальные откройте в списке.`));
   }
 }
 
@@ -75,6 +123,7 @@ export function MaterialDetailView({
   const [files, setFiles] = useState<MaterialFileRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [downloadingAll, setDownloadingAll] = useState(false);
   const materialPath = `/materials/${material.id}-${routeSlug(material.title)}`;
   const fileFromPath = pathname.match(/^\/materials\/[^/]+\/files\/(\d+)$/);
   const [selectedFileId, setSelectedFileId] = useState<number | null>(() => {
@@ -120,6 +169,16 @@ export function MaterialDetailView({
     router.push(materialPath, { scroll: false });
   };
 
+  const handleDownloadAll = async () => {
+    if (!files.length || downloadingAll) return;
+    setDownloadingAll(true);
+    try {
+      await downloadAllMaterials(files, notify, t);
+    } finally {
+      setDownloadingAll(false);
+    }
+  };
+
   return (
     <section className="detail-layout">
       <article className={`detail-hero ${material.color || "blue"}`}>
@@ -138,14 +197,15 @@ export function MaterialDetailView({
           <h3>{t("Файлы и шаблоны")}</h3>
           <button
             type="button"
-            disabled={!files.length}
-            onClick={() => {
-              if (!files.length) return;
-              void openMaterialDownload(files[0], notify, t);
-              if (files.length > 1) notify(t("Открыт первый файл. Остальные доступны в списке."));
-            }}
+            disabled={!files.length || downloadingAll}
+            onClick={() => void handleDownloadAll()}
           >
-            <Download size={16} /> {t("Скачать")}
+            <Download size={16} />
+            {downloadingAll
+              ? t("Скачиваем…")
+              : files.length > 1
+                ? t("Скачать все")
+                : t("Скачать")}
           </button>
         </div>
         {loading ? <PortalLoading label={t("Загрузка файлов…")} /> : null}
@@ -155,14 +215,28 @@ export function MaterialDetailView({
         ) : null}
         <div className="material-file-list">
           {files.map((file) => (
-            <button type="button" key={file.id} onClick={() => openFile(file.id)}>
-              <span>{file.format || "FILE"}</span>
-              <div>
-                <strong>{t(file.title)}</strong>
-                <small>{t("обновлено")}: {t(material.updated)}</small>
-              </div>
-              <ChevronRight size={20} />
-            </button>
+            <div className="material-file-row" key={file.id}>
+              <button type="button" className="material-file-open" onClick={() => openFile(file.id)}>
+                <span>{file.format || "FILE"}</span>
+                <div>
+                  <strong>{t(file.title)}</strong>
+                  <small>{t("обновлено")}: {t(material.updated)}</small>
+                </div>
+                <ChevronRight size={20} />
+              </button>
+              <button
+                type="button"
+                className="material-file-download"
+                aria-label={t("Скачать")}
+                title={t("Скачать")}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  void openMaterialDownload(file, notify, t);
+                }}
+              >
+                <Download size={16} />
+              </button>
+            </div>
           ))}
         </div>
       </section>
