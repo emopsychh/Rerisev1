@@ -66,15 +66,21 @@ body {
 }
 
 .brand-cube {
+  position: relative;
   width: 52px;
   height: 52px;
   border-radius: 16px;
-  background: #f5f5f1;
-  box-shadow: 0 18px 45px rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(143, 214, 223, 0.22);
+  background: linear-gradient(145deg, #1c2628, #12181a 55%, #0e1416);
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .brand-cube span {
-  color: #0a0e0c;
+  position: relative;
+  z-index: 1;
+  color: #f4f7f5;
   font-size: 20px;
   font-weight: 700;
 }
@@ -691,6 +697,7 @@ body {
   color: rgba(255, 255, 255, 0.66);
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .dashboard-content .course-topline {

@@ -406,7 +406,7 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
                   <h3>{t(selectedOffer.title)}</h3>
                   <p>{t(selectedOffer.text)}</p>
                 </div>
-                <div className="purchase-price"><strong>{selectedOffer.price}</strong><span>{selectedOffer.pv}</span></div>
+                <div className="purchase-price"><strong>{selectedOffer.price}</strong></div>
               </div>
               <div className="purchase-includes">
                 <h4>{t("Что входит")}</h4>

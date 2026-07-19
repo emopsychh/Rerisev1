@@ -81,12 +81,27 @@ body {
   border-color: rgba(255, 255, 255, 0.14);
 }
 
-/* CRM pipeline: lightweight stages with compact glass headers. */
+/* CRM pipeline: only stage headers — no filled column shells. */
+.crm-column,
+.crm-column.blue,
+.crm-column.green,
+.crm-column.orange,
+.crm-column.violet {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
 .crm-column {
   gap: 0;
   border-radius: 0;
   padding: 0;
   overflow: hidden;
+}
+
+.crm-column::after {
+  display: none;
 }
 
 .crm-column header {
