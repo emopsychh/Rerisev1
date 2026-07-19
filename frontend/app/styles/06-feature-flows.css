@@ -290,7 +290,7 @@
 }
 
 .invite-link-field button,
-.invite-actions button {
+.invite-copy-message {
   display: inline-flex;
   min-height: 38px;
   align-items: center;
@@ -303,30 +303,10 @@
   font-weight: 600;
 }
 
-.invite-main textarea {
-  min-height: 132px;
-  resize: none;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 16px;
-  outline: 0;
-  background: rgba(255, 255, 255, 0.045);
-  color: rgba(247, 247, 243, 0.78);
-  padding: 14px;
-  font: inherit;
-  line-height: 1.5;
-}
-
-.invite-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 9px;
-}
-
-.invite-actions button:first-child {
-  flex: 1 1 220px;
-}
-
-.invite-actions button:last-child {
+.invite-copy-message {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid rgba(143, 214, 223, 0.18);
   background: rgba(143, 214, 223, 0.13);
   color: #a9e5eb;
 }
@@ -340,53 +320,21 @@
   text-align: center;
 }
 
-.qr-placeholder {
-  display: grid;
-  width: 142px;
-  height: 142px;
-  place-items: center;
-  border-radius: 20px;
-  background: #f4f5f1;
-  color: #101414;
+.invite-qr {
+  display: block;
+  width: 160px;
+  height: 160px;
+  border-radius: 16px;
+  background: #ffffff;
+  object-fit: contain;
+}
+
+.invite-qr--empty {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .invite-side > strong { color: #f7f7f3; }
 .invite-side > p { margin: -8px 0 0; color: rgba(247, 247, 243, 0.48); font-size: 14px; line-height: 1.45; }
-
-.invite-stats {
-  display: grid;
-  width: 100%;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.invite-stats div {
-  display: grid;
-  min-width: 0;
-  gap: 4px;
-  justify-items: center;
-  overflow: hidden;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.045);
-  padding: 10px 6px;
-}
-
-.invite-stats span {
-  max-width: 100%;
-  color: rgba(247, 247, 243, 0.42);
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1.2;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-  text-wrap: balance;
-}
-
-.invite-stats b {
-  color: #f7f7f3;
-  font-size: 14px;
-  line-height: 1.2;
-}
 
 .mobile-more-backdrop {
   display: none;

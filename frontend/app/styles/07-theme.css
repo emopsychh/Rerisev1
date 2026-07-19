@@ -772,8 +772,7 @@ body {
 :root[data-theme="light"] .prompt-composer textarea,
 :root[data-theme="light"] .labor-toolbar input,
 :root[data-theme="light"] .profile-edit-grid input,
-:root[data-theme="light"] .withdraw-amount input,
-:root[data-theme="light"] .invite-main textarea {
+:root[data-theme="light"] .withdraw-amount input {
   color: var(--theme-text-primary);
 }
 
@@ -2646,7 +2645,6 @@ body {
 }
 
 :root[data-theme="light"] .invite-link-field,
-:root[data-theme="light"] .invite-main textarea,
 :root[data-theme="light"] .invite-side {
   border-color: var(--theme-border);
   background: var(--theme-surface-2);
@@ -2654,30 +2652,24 @@ body {
 
 :root[data-theme="light"] .invite-main label > span,
 :root[data-theme="light"] .withdraw-amount > span,
-:root[data-theme="light"] .invite-side > p,
-:root[data-theme="light"] .invite-stats span {
+:root[data-theme="light"] .invite-side > p {
   color: var(--theme-text-muted);
 }
 
 :root[data-theme="light"] .invite-link-field strong,
-:root[data-theme="light"] .invite-side > strong,
-:root[data-theme="light"] .invite-stats b {
+:root[data-theme="light"] .invite-side > strong {
   color: var(--theme-text-primary);
 }
 
-:root[data-theme="light"] .invite-link-field button,
-:root[data-theme="light"] .invite-actions button {
+:root[data-theme="light"] .invite-link-field button {
   background: var(--theme-surface-3);
   color: var(--theme-text-secondary);
 }
 
-:root[data-theme="light"] .invite-actions button:last-child {
+:root[data-theme="light"] .invite-copy-message {
+  border-color: rgba(32, 140, 148, 0.22);
   background: var(--theme-accent-soft);
   color: var(--theme-accent-strong);
-}
-
-:root[data-theme="light"] .invite-stats div {
-  background: rgba(255, 255, 255, 0.68);
 }
 
 :root[data-theme="light"] .mobile-more-sheet {
