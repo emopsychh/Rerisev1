@@ -196,7 +196,8 @@ MANUAL_PAYMENT_INSTRUCTIONS = os.getenv(
     "Заказ #{order_id} на ${amount_usd}. Оплатите USDT и дождитесь подтверждения администратором.",
 )
 ACTIVITY_DAYS_PER_MONTH = int(os.getenv("ACTIVITY_DAYS_PER_MONTH", "30"))
-RENEWAL_WINDOW_DAYS = int(os.getenv("RENEWAL_WINDOW_DAYS", "7"))
+# 0 = продление доступно всегда (раннее удлиняет срок). >0 = только в окне N дней до конца.
+RENEWAL_WINDOW_DAYS = int(os.getenv("RENEWAL_WINDOW_DAYS", "0"))
 
 # AI Hub gateway: mock (default) | openai
 IBOX_AI_PROVIDER = os.getenv("IBOX_AI_PROVIDER", "mock")

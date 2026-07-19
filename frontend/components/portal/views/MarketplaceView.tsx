@@ -12,10 +12,21 @@ import { PageShell } from "../shared/PageShell";
 import { PortalDialog } from "../shared/PortalDialog";
 import { PortalLoading } from "../shared/PortalLoading";
 
+const TARIFF_RANK: Record<string, number> = {
+  rise: 1,
+  "rise-pro": 2,
+  "rise-pro-max": 3,
+};
+
+function tariffRank(id?: string | null): number {
+  if (!id) return 0;
+  return TARIFF_RANK[id] ?? 0;
+}
+
 export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: NotifyFn; marketTab: MarketTab }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { tariffs, tokens, reload, home, ready, wallet } = usePortalBackend();
+  const { tariffs, tokens, reload, home, dashboard, ready, wallet } = usePortalBackend();
   const [selectedOffer, setSelectedOffer] = useState<MarketOffer | null>(null);
   const [purchaseStep, setPurchaseStep] = useState<"details" | "ready">("details");
   const [ordering, setOrdering] = useState(false);
@@ -24,6 +35,20 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
   const availableUsd = Number(
     (wallet?.balance as { available_usd?: number } | undefined)?.available_usd ?? 0,
   );
+  const currentTariffId = String(
+    (dashboard?.partner as { tariff_id?: string } | undefined)?.tariff_id
+    || home?.partner_summary?.tariff_id
+    || "",
+  ) || null;
+
+  const resolvePackageOrderType = (productId: string): "purchase" | "upgrade" | null => {
+    if (!currentTariffId) return "purchase";
+    const current = tariffRank(currentTariffId);
+    const target = tariffRank(productId);
+    if (target <= 0) return "purchase";
+    if (target > current) return "upgrade";
+    return null;
+  };
 
   const apiPackages = tariffs.map((item) => {
     const terms = (item.terms as Record<string, unknown> | undefined) || {};
@@ -347,9 +372,20 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
                     <div className="marketing-plan-notice">
                       <ShieldCheck size={17} />
                       <p>{selectedOffer.kind === "package"
-                        ? (canPayWallet
-                          ? t(`На кошельке $${availableUsd.toFixed(2)} — хватит для оплаты с баланса. Тариф активируется сразу.`)
-                          : t(`Баланс кошелька: $${availableUsd.toFixed(2)}. Если средств не хватит, будет создан внешний счёт.`))
+                        ? (() => {
+                          const orderType = resolvePackageOrderType(selectedOffer.productId || "");
+                          if (orderType === null) {
+                            return t("Этот тариф уже активен или ниже текущего. Продление активности — через «Продлить» ($30).");
+                          }
+                          if (orderType === "upgrade") {
+                            return canPayWallet
+                              ? t(`Апгрейд с баланса ($${availableUsd.toFixed(2)}). Срок активности не сбрасывается.`)
+                              : t(`Апгрейд с текущего тарифа. Баланс: $${availableUsd.toFixed(2)}. При нехватке — внешний счёт.`);
+                          }
+                          return canPayWallet
+                            ? t(`На кошельке $${availableUsd.toFixed(2)} — хватит для оплаты с баланса. Тариф активируется сразу.`)
+                            : t(`Баланс кошелька: $${availableUsd.toFixed(2)}. Если средств не хватит, будет создан внешний счёт.`);
+                        })()
                         : selectedOffer.kind === "program"
                           ? t("Цена, PV, состав доступа и способ оплаты программы пока не утверждены.")
                           : (canPayWallet
@@ -369,13 +405,26 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
                             notify(t("Не удалось определить продукт"));
                             return;
                           }
+                          if (selectedOffer.kind === "package") {
+                            const orderType = resolvePackageOrderType(productId);
+                            if (!orderType) {
+                              notify(t("Этот тариф уже у вас или ниже текущего. Для продления активности откройте «Продлить»."));
+                              return;
+                            }
+                            await placeOrder(productId, orderType);
+                            return;
+                          }
                           await placeOrder(productId, "purchase");
                           return;
                         }
                         setPurchaseStep("ready");
                         notify(t("Уведомление о запуске программы включено"));
                       }}>{selectedOffer.kind === "package" || selectedOffer.kind === "tokens"
-                        ? (canPayWallet ? t("Оплатить с баланса") : t("Оформить заказ"))
+                        ? (canPayWallet
+                          ? t("Оплатить с баланса")
+                          : (selectedOffer.kind === "package" && currentTariffId && resolvePackageOrderType(selectedOffer.productId || "") === "upgrade"
+                            ? t("Оформить апгрейд")
+                            : t("Оформить заказ")))
                         : t("Уведомить о запуске")} <ChevronRight size={17} /></button>
                     </footer>
                   </>

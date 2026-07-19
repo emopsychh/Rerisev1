@@ -32,10 +32,17 @@ def get_user_subscription(user_id: int) -> Subscription | None:
 
 
 def subscription_can_renew(subscription: Subscription | None) -> bool:
-    """True если активность истекла или входит в окно продления."""
+    """True если можно оформить продление.
+
+    Раннее продление удлиняет срок от max(active_until, now).
+    RENEWAL_WINDOW_DAYS <= 0 — продление доступно всегда при наличии подписки.
+    > 0 — только если до окончания активности осталось не больше N дней (или уже истекла).
+    """
     if not subscription:
         return False
     window_days = getattr(settings, "RENEWAL_WINDOW_DAYS", RENEWAL_WINDOW_DAYS)
+    if window_days <= 0:
+        return True
     return subscription.active_until <= timezone.now() + timedelta(days=window_days)
 
 

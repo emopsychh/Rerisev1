@@ -103,7 +103,6 @@ export function PortalShellInner(props: {
   const sidebarActiveUntil = hasTariff && activityUntilRaw
     ? formatApiDate(activityUntilRaw, "—")
     : null;
-  const canRenew = Boolean(partnerSummary?.can_renew);
   const liveNotifications = backend.notifications.slice(0, 8).map((item) => {
     const type = String(item.type || "system");
     const body = String(item.body || "").trim();
@@ -184,19 +183,14 @@ export function PortalShellInner(props: {
                 ? (sidebarActiveUntil ? `${t("Активность")} · ${t("до")} ${sidebarActiveUntil}` : t("Активность не указана"))
                 : t("Подписка ещё не оформлена")}
             </p>
-            {hasTariff && canRenew ? (
+            {hasTariff ? (
               <button type="button" onClick={openRenewal}>
                 {t("Продлить")}
                 <ChevronRight size={16} />
               </button>
-            ) : !hasTariff ? (
+            ) : (
               <button type="button" onClick={() => goMarketTab("packages")}>
                 {t("Выбрать тариф")}
-                <ChevronRight size={16} />
-              </button>
-            ) : (
-              <button type="button" onClick={() => goSection("marketplace")}>
-                {t("Маркет")}
                 <ChevronRight size={16} />
               </button>
             )}

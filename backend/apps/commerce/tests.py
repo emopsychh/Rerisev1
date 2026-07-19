@@ -170,6 +170,32 @@ class CommerceAPITestCase(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
 
+    def test_early_renewal_allowed_with_active_tariff(self):
+        """Продление доступно сразу после покупки (не только в окне 7 дней)."""
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        self._create_and_confirm("rise")
+        subscription = Subscription.objects.get(user=self.user)
+        subscription.active_until = timezone.now() + timedelta(days=40)
+        subscription.save(update_fields=["active_until"])
+        before = subscription.active_until
+
+        self.client.credentials(**self.auth)
+        response = self.client.post(
+            "/api/v1/store/orders",
+            {"product_id": "subscription", "order_type": "renewal"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        payment = Payment.objects.get(order_id=response.data["data"]["order_id"])
+        if payment.provider != "wallet":
+            PaymentConfirmationService.confirm(payment)
+
+        subscription.refresh_from_db()
+        self.assertGreater(subscription.active_until, before)
+
     def test_upgrade_preserves_active_until(self):
         self._create_and_confirm("rise")
         subscription = Subscription.objects.get(user=self.user)
