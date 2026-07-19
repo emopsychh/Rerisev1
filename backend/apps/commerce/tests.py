@@ -1,5 +1,5 @@
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -8,6 +8,7 @@ from apps.commerce.services import PaymentConfirmationService
 from apps.users.services import UserRegistrationService
 
 
+@override_settings(STORE_WALLET_ONLY=False)
 class CommerceAPITestCase(TestCase):
     def setUp(self):
         call_command("seed_commerce")
@@ -434,7 +435,19 @@ class CommerceAPITestCase(TestCase):
             {"product_id": "rise-pro", "order_type": "upgrade"},
             format="json",
         )
-        # Недостаточно для wallet → external pending (не paid)
+        # Недостаточно для wallet → при STORE_WALLET_ONLY=False создаётся внешний pending
         self.assertEqual(second.status_code, status.HTTP_201_CREATED)
         self.assertEqual(second.data["data"]["status"], "pending")
         self.assertNotEqual(second.data["data"]["payment"]["provider"], "wallet")
+
+    @override_settings(STORE_WALLET_ONLY=True)
+    def test_wallet_only_rejects_insufficient_balance(self):
+        self.client.credentials(**self.auth)
+        response = self.client.post(
+            "/api/v1/store/orders",
+            {"product_id": "rise", "order_type": "purchase"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("Недостаточно средств", response.data["error"]["message"])
+        self.assertFalse(Order.objects.filter(user=self.user).exists())

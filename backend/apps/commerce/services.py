@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
@@ -15,6 +16,12 @@ class OrderValidationError(ValueError):
 
 
 class OrderService:
+    WALLET_PRODUCT_TYPES = {
+        Product.TYPE_TOKENS,
+        Product.TYPE_TARIFF,
+        Product.TYPE_SUBSCRIPTION,
+    }
+
     @staticmethod
     @transaction.atomic
     def create_order(user: User, product_slug: str, order_type: str) -> Order:
@@ -35,6 +42,27 @@ class OrderService:
         if order_type == Order.TYPE_UPGRADE and subscription:
             previous_tariff_id = subscription.tariff_id
 
+        wallet_only = getattr(settings, "STORE_WALLET_ONLY", True)
+        if product.type in OrderService.WALLET_PRODUCT_TYPES:
+            if OrderService._wallet_can_cover(user, product.price_usd):
+                order = Order.objects.create(
+                    user=user,
+                    product=product,
+                    amount_usd=product.price_usd,
+                    status=Order.STATUS_PENDING,
+                    order_type=order_type,
+                    previous_tariff_id=previous_tariff_id,
+                )
+                return OrderService._pay_with_wallet(user, order)
+            if wallet_only:
+                from apps.wallet.services import WalletUpdater
+
+                available = WalletUpdater.refresh(user).available_usd
+                raise OrderValidationError(
+                    f"Недостаточно средств на балансе: нужно ${product.price_usd}, "
+                    f"доступно ${available}"
+                )
+
         order = Order.objects.create(
             user=user,
             product=product,
@@ -43,16 +71,6 @@ class OrderService:
             order_type=order_type,
             previous_tariff_id=previous_tariff_id,
         )
-
-        # При достаточном available_usd — мгновенная оплата с кошелька
-        # (тариф / подписка / токены). Программы — только когда появится fulfill-handler.
-        wallet_types = {
-            Product.TYPE_TOKENS,
-            Product.TYPE_TARIFF,
-            Product.TYPE_SUBSCRIPTION,
-        }
-        if product.type in wallet_types and OrderService._wallet_can_cover(user, order.amount_usd):
-            return OrderService._pay_with_wallet(user, order)
 
         provider = get_payment_provider()
         intent = provider.create_invoice(

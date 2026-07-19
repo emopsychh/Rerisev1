@@ -190,6 +190,8 @@ RERISE_REFERRAL_BASE_URL = os.getenv(
 )
 
 PAYMENT_PROVIDER = os.getenv("PAYMENT_PROVIDER", "manual")
+# Пока единственный способ оплаты в витрине — баланс кошелька.
+STORE_WALLET_ONLY = os.getenv("STORE_WALLET_ONLY", "true").lower() == "true"
 MANUAL_PAYMENT_TTL_MINUTES = int(os.getenv("MANUAL_PAYMENT_TTL_MINUTES", "60"))
 MANUAL_PAYMENT_INSTRUCTIONS = os.getenv(
     "MANUAL_PAYMENT_INSTRUCTIONS",

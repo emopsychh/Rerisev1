@@ -20,6 +20,7 @@ from tests.support import DEFAULT_TEST_PASSWORD
     CRYPTOBOT_WEBHOOK_SECRET_PATH="wh-secret",
     CELERY_TASK_ALWAYS_EAGER=True,
     CELERY_TASK_EAGER_PROPAGATES=True,
+    STORE_WALLET_ONLY=False,
 )
 class CryptoBotWebhookTests(TestCase):
     def setUp(self):
@@ -207,7 +208,7 @@ class PaymentSyncTests(TestCase):
         self.assertEqual(order.status, Order.STATUS_PAID)
 
 
-@override_settings(PAYMENT_PROVIDER="mock")
+@override_settings(PAYMENT_PROVIDER="mock", STORE_WALLET_ONLY=False)
 class MockProviderOrderTests(TestCase):
     def setUp(self):
         from django.core.management import call_command

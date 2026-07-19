@@ -156,15 +156,16 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
     try {
       const order = await createOrder(productId, orderType);
       const paidFromWallet = order.status === "paid" && order.payment?.provider === "wallet";
-      if (!paidFromWallet && order.payment?.payment_url) {
-        window.open(order.payment.payment_url, "_blank", "noopener,noreferrer");
+      if (!paidFromWallet) {
+        notify(t("Недостаточно средств на балансе. Пополните кошелёк и попробуйте снова."));
+        return;
       }
       successLockedRef.current = true;
       setSuccessInfo(buildSuccessInfo(selectedOffer, order, orderType));
       setPurchaseStep("ready");
       await reload();
     } catch (err) {
-      notify(err instanceof ApiError ? err.message : t("Не удалось создать заказ"));
+      notify(err instanceof ApiError ? err.message : t("Недостаточно средств на балансе"));
     } finally {
       setOrdering(false);
     }
@@ -435,17 +436,17 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
                           if (orderType === "upgrade") {
                             return canPayWallet
                               ? t(`Апгрейд с баланса ($${availableUsd.toFixed(2)}). Срок активности не сбрасывается.`)
-                              : t(`Апгрейд с текущего тарифа. Баланс: $${availableUsd.toFixed(2)}. При нехватке — внешний счёт.`);
+                              : t(`Недостаточно средств. Нужно ${selectedOffer.price}, на кошельке $${availableUsd.toFixed(2)}.`);
                           }
                           return canPayWallet
                             ? t(`На кошельке $${availableUsd.toFixed(2)} — хватит для оплаты с баланса. Тариф активируется сразу.`)
-                            : t(`Баланс кошелька: $${availableUsd.toFixed(2)}. Если средств не хватит, будет создан внешний счёт.`);
+                            : t(`Недостаточно средств. Нужно ${selectedOffer.price}, на кошельке $${availableUsd.toFixed(2)}.`);
                         })()
                         : selectedOffer.kind === "program"
                           ? t("Цена, PV, состав доступа и способ оплаты программы пока не утверждены.")
                           : (canPayWallet
                             ? t(`На кошельке $${availableUsd.toFixed(2)} — токены спишутся с баланса сразу.`)
-                            : t("Пакеты токенов: при достаточном балансе USD списываются сразу. Иначе — внешний платёж. PV не начисляется."))}</p>
+                            : t(`Недостаточно средств. Нужно ${selectedOffer.price}, на кошельке $${availableUsd.toFixed(2)}.`))}</p>
                     </div>
                     <footer className="portal-dialog-actions">
                       <button onClick={closeOffer}>{t("Отмена")}</button>
@@ -480,11 +481,7 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
                         });
                         setPurchaseStep("ready");
                       }}>{selectedOffer.kind === "package" || selectedOffer.kind === "tokens"
-                        ? (canPayWallet
-                          ? t("Оплатить с баланса")
-                          : (selectedOffer.kind === "package" && currentTariffId && resolvePackageOrderType(selectedOffer.productId || "") === "upgrade"
-                            ? t("Оформить апгрейд")
-                            : t("Оформить заказ")))
+                        ? t("Оплатить с баланса")
                         : t("Уведомить о запуске")} <ChevronRight size={17} /></button>
                     </footer>
                   </>

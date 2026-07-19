@@ -1,5 +1,5 @@
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -11,6 +11,7 @@ from apps.users.models import User
 from tests.support import AuthStoreTestMixin
 
 
+@override_settings(STORE_WALLET_ONLY=False)
 class IboxAPITestCase(AuthStoreTestMixin, TestCase):
     def setUp(self):
         self.client = APIClient()

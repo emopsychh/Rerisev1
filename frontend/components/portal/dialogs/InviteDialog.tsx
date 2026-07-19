@@ -81,7 +81,7 @@ export function InviteDialog({ onClose, notify, t }: { onClose: () => void; noti
         <div className="invite-qr-block">
           <div className="invite-qr-aura" aria-hidden />
           {qrDataUrl ? (
-            <img className="invite-qr" src={qrDataUrl} alt={t("QR-код приглашения")} width={168} height={168} />
+            <img className="invite-qr" src={qrDataUrl} alt={t("QR-код приглашения")} width={156} height={156} />
           ) : (
             <div className="invite-qr invite-qr--empty" aria-hidden />
           )}

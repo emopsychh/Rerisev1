@@ -54,25 +54,22 @@ export function RenewalDialog({ onClose, notify, t }: { onClose: () => void; not
     try {
       const order = await renewPartner();
       const paidFromWallet = order.status === "paid" && order.payment?.provider === "wallet";
-      if (!paidFromWallet && order.payment?.payment_url) {
-        window.open(order.payment.payment_url, "_blank", "noopener,noreferrer");
+      if (!paidFromWallet) {
+        notify(t("Недостаточно средств на балансе. Пополните кошелёк и попробуйте снова."));
+        return;
       }
       setSuccessInfo({
-        headline: paidFromWallet ? "Активность продлена" : "Заявка на продление создана",
-        message: paidFromWallet
-          ? "Оплата с баланса прошла успешно. Срок активности удлинён на месяц."
-          : "Заказ создан. Завершите оплату по счёту — после этого активность продлится.",
-        status: paidFromWallet ? "Оплачено" : "Ожидает оплаты",
+        headline: "Активность продлена",
+        message: "Оплата с баланса прошла успешно. Срок активности удлинён на месяц.",
+        status: "Оплачено",
         amount: `$${priceUsd}`,
         orderId: order.order_id,
-        paymentHint: paidFromWallet
-          ? null
-          : "Внешний счёт открыт в новой вкладке, если браузер не заблокировал окно.",
+        paymentHint: null,
       });
       setStep("success");
       await reload();
     } catch (error) {
-      const message = error instanceof ApiError ? error.message : t("Не удалось оформить продление");
+      const message = error instanceof ApiError ? error.message : t("Недостаточно средств на балансе");
       notify(message);
     } finally {
       setSubmitting(false);
@@ -109,7 +106,7 @@ export function RenewalDialog({ onClose, notify, t }: { onClose: () => void; not
               <ShieldCheck size={17} />
               <p>{canPayWallet
                 ? t(`На кошельке $${availableUsd.toFixed(2)} — хватит. Продление спишется с баланса сразу, срок удлинится от текущей даты активности.`)
-                : t(`Баланс кошелька: $${availableUsd.toFixed(2)}. При нехватке средств будет создан внешний счёт. Раннее продление удлиняет текущий срок.`)}</p>
+                : t(`Недостаточно средств. Нужно $${priceUsd}, на кошельке $${availableUsd.toFixed(2)}. Пополните баланс и попробуйте снова.`)}</p>
             </div>
           )}
           <section className="renewal-includes">
@@ -133,18 +130,16 @@ export function RenewalDialog({ onClose, notify, t }: { onClose: () => void; not
           <h3>{t("Подтвердите продление")}</h3>
           <p>{canPayWallet
             ? t("С баланса спишется $30, активность удлинится на месяц.")
-            : t("Проверьте условия перед оформлением. При нехватке баланса откроется внешний счёт.")}</p>
+            : t(`Недостаточно средств. Нужно $${priceUsd}, на кошельке $${availableUsd.toFixed(2)}.`)}</p>
           <div><span>{t("Тариф")}</span><strong>{tariffName}</strong></div>
           <div><span>{t("Период")}</span><strong>{t("Ежемесячное продление")}</strong></div>
           <div><span>{t("Сумма")}</span><strong>${priceUsd}</strong></div>
-          <div><span>{t("Оплата")}</span><strong>{canPayWallet ? t("С баланса") : t("Внешний счёт / баланс")}</strong></div>
+          <div><span>{t("Оплата")}</span><strong>{t("С баланса")}</strong></div>
           <div><span>{t("Подписочный PV")}</span><strong>{SUBSCRIPTION_RULES.generatedPv} PV · {t(`до ${pvDepth} физических уровней`)}</strong></div>
           <footer className="portal-dialog-actions">
             <button type="button" disabled={submitting} onClick={() => setStep("details")}>{t("Назад")}</button>
             <button type="button" disabled={submitting || !canRenew} onClick={() => void submitRenewal()}>
-              {submitting
-                ? t("Оформляем…")
-                : (canPayWallet ? t("Оплатить с баланса") : t("Оформить продление"))}
+              {submitting ? t("Оформляем…") : t("Оплатить с баланса")}
             </button>
           </footer>
         </div>
