@@ -147,7 +147,7 @@
   opacity: 0.8;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 900px){
   .home-next-actions {
     grid-template-columns: 1fr;
   }
@@ -177,6 +177,6 @@
   font-size: 14px;
 }
 
-@keyframes portal-spin {
+@keyframes portal-spin{
   to { transform: rotate(360deg); }
 }

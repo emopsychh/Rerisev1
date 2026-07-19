@@ -538,7 +538,7 @@
 .crm-modal .crm-modal-footer button { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: 8px; border: 1px solid rgba(255, 255, 255, 0.09); border-radius: 13px; background: rgba(255, 255, 255, 0.055); color: rgba(247, 247, 243, 0.68); padding: 0 16px; }
 .crm-modal .crm-modal-footer button:last-child { border-color: rgba(143, 214, 223, 0.24); background: linear-gradient(135deg, rgba(143, 214, 223, 0.16), rgba(255, 255, 255, 0.07)); color: #dff7f9; }
 
-@media (max-width: 760px) {
+@media (max-width: 760px){
   .crm-modal-actions {
     grid-template-columns: 1fr;
   }
@@ -645,7 +645,7 @@
 }
 
 /* Keep the stage rail on the same horizontal grid as the timeline cards below. */
-@media (min-width: 901px) {
+@media (min-width: 901px){
   .crm-modal-backdrop .crm-modal-head {
     padding: 19px 0;
   }
@@ -1007,7 +1007,7 @@
   color: #c2a1f7;
 }
 
-@keyframes crm-drawer-in {
+@keyframes crm-drawer-in{
   from {
     opacity: 0.88;
     transform: translateY(calc(100% + 18px));
@@ -1019,7 +1019,7 @@
   }
 }
 
-@keyframes crm-drawer-out {
+@keyframes crm-drawer-out{
   from {
     opacity: 1;
     transform: translateY(0);
@@ -1031,17 +1031,17 @@
   }
 }
 
-@keyframes crm-drawer-backdrop-in {
+@keyframes crm-drawer-backdrop-in{
   from { background-color: rgba(2, 4, 4, 0); -webkit-backdrop-filter: blur(0) saturate(1); backdrop-filter: blur(0) saturate(1); }
   to { background-color: rgba(2, 4, 4, 0.42); -webkit-backdrop-filter: blur(5px) saturate(0.94); backdrop-filter: blur(5px) saturate(0.94); }
 }
 
-@keyframes crm-drawer-backdrop-out {
+@keyframes crm-drawer-backdrop-out{
   from { background-color: rgba(2, 4, 4, 0.42); -webkit-backdrop-filter: blur(5px) saturate(0.94); backdrop-filter: blur(5px) saturate(0.94); }
   to { background-color: rgba(2, 4, 4, 0); -webkit-backdrop-filter: blur(0) saturate(1); backdrop-filter: blur(0) saturate(1); }
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 1180px){
   .crm-modal-backdrop .crm-drawer-shell {
     width: min(900px, calc(100vw - 24px));
   }
@@ -1051,7 +1051,7 @@
   }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 900px){
   .crm-modal-backdrop .crm-modal-head {
     grid-template-columns: minmax(250px, 0.7fr) minmax(380px, 1.3fr);
     gap: 10px;
@@ -1069,7 +1069,7 @@
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 760px){
   .crm-modal-backdrop {
     padding: 8px;
   }
@@ -1125,7 +1125,7 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion: reduce){
   .crm-modal-backdrop,
   .crm-modal-backdrop .crm-drawer-shell,
   .crm-modal-backdrop.closing,
@@ -1248,7 +1248,7 @@
   box-shadow: 0 16px 30px rgba(0, 0, 0, 0.18);
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 1180px){
   .package-card {
     grid-template-columns: 1fr;
   }
@@ -1266,7 +1266,7 @@
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 760px){
   .partner-package-grid,
 .token-overview {
     grid-template-columns: 1fr;
@@ -1784,4 +1784,3 @@
     radial-gradient(360px 230px at 102% 38%, rgba(149, 239, 104, 0.026), transparent 78%),
     linear-gradient(126deg, transparent 0 60%, rgba(255, 255, 255, 0.015) 76%, transparent 92%);
 }
-

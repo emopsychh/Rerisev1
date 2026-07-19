@@ -375,7 +375,7 @@ body {
   color: #dff9fb;
 }
 
-@keyframes language-menu-unfold {
+@keyframes language-menu-unfold{
   from {
     opacity: 0;
     transform: scaleY(0.72) translateY(-5px);
@@ -516,13 +516,13 @@ body {
   color: #0b0e0c;
 }
 
-@media (max-width: 1600px) {
+@media (max-width: 1600px){
   .portal-shell {
     grid-template-columns: 252px minmax(0, 1fr);
   }
 }
 
-@media (max-width: 1360px) {
+@media (max-width: 1360px){
   .course-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -532,7 +532,7 @@ body {
   }
 }
 
-@media (max-width: 1080px) {
+@media (max-width: 1080px){
   .portal-main {
     padding: 14px 14px 30px;
   }
@@ -550,7 +550,7 @@ body {
   }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 560px){
   .topbar-title h1 {
     font-size: 18px;
   }
@@ -1431,7 +1431,7 @@ body {
   gap: 20px;
 }
 
-@media (min-width: 1081px) {
+@media (min-width: 1081px){
   .portal-main.crm-main {
     display: flex;
     height: calc(100vh - (var(--sidebar-gutter) * 2));
@@ -1688,7 +1688,7 @@ body {
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-@media (max-width: 1360px) {
+@media (max-width: 1360px){
   .cabinet-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1725,7 +1725,7 @@ body {
   }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 900px){
   .cabinet-grid {
     grid-template-columns: 1fr;
   }
@@ -1737,7 +1737,7 @@ body {
   }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 560px){
 
   .cabinet-hero,
 .cabinet-team-depth,
@@ -1851,7 +1851,7 @@ body {
   justify-content: center;
 }
 
-@media (max-width: 1600px) {
+@media (max-width: 1600px){
   .portal-shell {
     grid-template-columns: 246px minmax(0, 1fr);
   }
@@ -1870,9 +1870,8 @@ body {
   }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 560px){
   .topbar-actions {
     grid-template-columns: 1fr auto auto;
   }
 }
-

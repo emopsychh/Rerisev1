@@ -12,7 +12,6 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { ThemeToggle } from "../../app/theme-toggle";
 import { useAuth } from "../../lib/auth/AuthProvider";
 import { usePortalBackend } from "../../lib/auth/PortalBackendProvider";
 import { markAllNotificationsRead, markNotificationRead } from "../../lib/api/me";
@@ -241,7 +240,6 @@ export function PortalShellInner(props: {
               <UserPlus size={18} />
               {t("Пригласить")}
             </button>
-            <ThemeToggle className="topbar-theme-toggle" />
             <button
               className="bell-button"
               aria-label={t("Уведомления")}
@@ -361,9 +359,6 @@ export function PortalShellInner(props: {
                 </button>
               ))}
             </div>
-            <footer className="mobile-theme-footer">
-              <ThemeToggle className="mobile-theme-toggle" />
-            </footer>
           </section>
         </div>
       ) : null}

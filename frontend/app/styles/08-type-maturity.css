@@ -412,10 +412,7 @@ body {
   min-height: var(--hit-compact);
 }
 
-:root .topbar-actions :is(.topbar-theme-toggle, .language-switcher, .bell-button) {
-  min-width: var(--hit-standard);
-  min-height: var(--hit-standard);
-}
+
 
 :root .language-switcher > button {
   width: 100%;
@@ -428,11 +425,7 @@ body {
   min-height: var(--hit-compact);
 }
 
-:root .theme-toggle-icon {
-  width: var(--icon-compact);
-  height: var(--icon-compact);
-  stroke-width: 1.8;
-}
+
 
 :root :is(.invite-button, .bell-button, .topbar-back) svg {
   width: var(--icon-control);
@@ -720,7 +713,7 @@ body {
   background: rgba(247, 247, 243, 0.16);
 }
 
-@media (max-width: 1360px) {
+@media (max-width: 1360px){
   :root .crm-board {
     grid-template-columns: repeat(4, minmax(220px, 1fr));
     gap: 12px;
@@ -765,7 +758,7 @@ body {
 
 /* The drawer header and its stage rail share the same inner grid as the right
    content column. This fixes the right-edge drift of the “Сделка” stage. */
-@media (min-width: 901px) {
+@media (min-width: 901px){
   :root .crm-modal-stagebar {
     box-sizing: border-box;
     width: 100%;
@@ -941,7 +934,7 @@ body {
   text-overflow: clip;
 }
 
-@media (max-width: 680px) {
+@media (max-width: 680px){
   :root .withdraw-dialog :is(.withdraw-summary, .withdraw-verify-details) {
     grid-template-columns: 1fr;
   }
@@ -1000,7 +993,7 @@ body {
   font-weight: var(--weight-label);
 }
 
-@media (pointer: coarse) {
+@media (pointer: coarse){
   :root :is(
     .topbar-section-switch button,
     .language-menu button,
@@ -1016,7 +1009,7 @@ body {
   }
 }
 
-@media (max-height: 760px) and (min-width: 1081px) {
+@media (max-height: 760px) and (min-width: 1081px){
   :root .portal-sidebar {
     overflow-y: auto;
   }
@@ -1026,10 +1019,9 @@ body {
   }
 }
 
-@media (max-width: 620px) {
+@media (max-width: 620px){
   :root {
     --type-page-title: 28px;
     --type-display: 38px;
   }
 }
-

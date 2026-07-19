@@ -143,7 +143,7 @@
   padding-inline: var(--space-3);
 }
 
-@media (min-width: 621px) {
+@media (min-width: 621px){
   :root .portal-dialog-backdrop,
   :root .mobile-more-backdrop {
     padding: var(--space-6);
@@ -164,7 +164,7 @@
   margin-top: 0;
 }
 
-@media (min-width: 1081px) {
+@media (min-width: 1081px){
   :root {
     --topbar-fixed-height: 72px;
     --topbar-content-gap: var(--space-5);
@@ -190,13 +190,13 @@
   }
 }
 
-@media (min-width: 1181px) and (min-height: 800px) {
+@media (min-width: 1181px) and (min-height: 800px){
   :root .portal-main:has(.marketplace-packages-page) {
     padding-top: calc(var(--topbar-fixed-height) + var(--topbar-content-gap));
   }
 }
 
-@media (max-width: 1080px) {
+@media (max-width: 1080px){
   :root {
     --page-stack-gap: var(--space-4);
   }
@@ -214,7 +214,7 @@
   }
 }
 
-@media (max-width: 620px) {
+@media (max-width: 620px){
   :root {
     --type-topbar-title: 18px;
   }
@@ -246,7 +246,7 @@
   white-space: nowrap;
 }
 
-@container (max-width: 340px) {
+@container (max-width: 340px){
   :root .product-home .program-single-line-title .course-visual {
     width: 60px;
     height: 60px;
@@ -270,10 +270,7 @@
 
 /* The wordmark is brand artwork rather than interface copy, so it keeps a
    firmer weight than the calmer portal typography. */
-:root .brand-cube span,
-:root[data-theme="light"] .brand-cube span {
-  font-weight: 900;
-}
+
 
 :root .brand strong {
   font-weight: 900;
@@ -284,9 +281,7 @@
   font-weight: 800;
 }
 
-:root[data-theme="light"] .portal-sidebar .brand small {
-  color: #46585c;
-}
+
 
 /* Premium sidebar: navigation remains explicit, but active and hover states
    read as layers of glass instead of large solid buttons. */
@@ -455,98 +450,34 @@
   transform: translateY(-1px);
 }
 
-:root[data-theme="light"] .portal-sidebar {
-  border-color: rgba(39, 125, 135, 0.13);
-  background:
-    radial-gradient(ellipse 92% 34% at 5% 0%, rgba(255, 255, 255, 0.92), transparent 72%),
-    radial-gradient(ellipse 96% 34% at 100% 100%, rgba(39, 125, 135, 0.065), transparent 74%),
-    linear-gradient(154deg, rgba(241, 246, 247, 0.985), rgba(226, 235, 237, 0.985));
-  box-shadow:
-    0 28px 72px rgba(53, 75, 80, 0.125),
-    inset 0 1px 0 rgba(255, 255, 255, 0.94),
-    inset 0 -1px 0 rgba(39, 125, 135, 0.035);
-}
 
-:root[data-theme="light"] .portal-sidebar::before {
-  background:
-    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.96), transparent) 18% 0 / 44% 1px no-repeat,
-    linear-gradient(180deg, transparent, rgba(39, 125, 135, 0.13), transparent) 100% 18% / 1px 28% no-repeat,
-    radial-gradient(230px 76px at 18% 0%, rgba(255, 255, 255, 0.68), transparent 76%);
-  opacity: 0.86;
-}
 
-:root[data-theme="light"] .side-link {
-  border-color: transparent;
-  background: transparent;
-  color: var(--theme-text-secondary);
-}
 
-:root[data-theme="light"] .side-link > svg {
-  color: rgba(55, 79, 84, 0.68);
-}
 
-:root[data-theme="light"] .side-link:hover {
-  border-color: rgba(39, 125, 135, 0.08);
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.3) 64%, transparent);
-  color: var(--theme-text-primary);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
-}
 
-:root[data-theme="light"] .side-link:hover > svg {
-  color: var(--theme-accent-strong);
-}
 
-:root[data-theme="light"] .side-link.active,
-:root[data-theme="light"] .side-link.active:hover {
-  border-color: var(--theme-border);
-  background:
-    linear-gradient(92deg, rgba(255, 255, 255, 0.72), rgba(232, 241, 242, 0.72)),
-    var(--theme-surface-active);
-  color: var(--theme-accent-strong);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    0 9px 22px rgba(45, 75, 82, 0.055);
-}
 
-:root[data-theme="light"] .side-link.active > svg,
-:root[data-theme="light"] .side-link.active:hover > svg {
-  color: var(--theme-accent-strong);
-  filter: drop-shadow(0 0 6px rgba(39, 125, 135, 0.12));
-}
 
-:root[data-theme="light"] .sidebar-bottom .pro-card {
-  border-color: rgba(39, 125, 135, 0.13);
-  background:
-    radial-gradient(circle at 88% 13%, rgba(49, 111, 168, 0.11), transparent 92px),
-    radial-gradient(circle at 10% 100%, rgba(39, 125, 135, 0.055), transparent 110px),
-    linear-gradient(148deg, rgba(255, 255, 255, 0.76), rgba(226, 236, 238, 0.83));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.94),
-    0 17px 38px rgba(45, 75, 82, 0.07);
-}
 
-:root[data-theme="light"] .pro-card > small {
-  color: var(--theme-accent-strong);
-}
 
-:root[data-theme="light"] .support-button {
-  border-color: rgba(39, 125, 135, 0.1);
-  background: rgba(255, 255, 255, 0.44);
-  color: var(--theme-text-secondary);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.88);
-}
 
-:root[data-theme="light"] .support-button:hover {
-  border-color: rgba(39, 125, 135, 0.18);
-  background: rgba(255, 255, 255, 0.66);
-  color: var(--theme-accent-strong);
-}
 
-@media (max-height: 760px) and (min-width: 1081px) {
+
+
+
+
+
+
+
+
+
+
+
+
+@media (max-height: 760px) and (min-width: 1081px){
   :root .side-link,
   :root .side-link.active,
   :root .side-link.active:hover {
     min-height: 34px;
   }
 }
-

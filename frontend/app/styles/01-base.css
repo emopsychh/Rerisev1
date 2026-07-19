@@ -543,7 +543,7 @@ button.brand:hover .brand-cube {
   display: none;
 }
 
-@media (max-width: 1600px) {
+@media (max-width: 1600px){
   .portal-sidebar {
     gap: 16px;
     padding: 24px 16px;
@@ -565,14 +565,14 @@ button.brand:hover .brand-cube {
   }
 }
 
-@media (max-width: 1360px) {
+@media (max-width: 1360px){
   .topbar-actions {
     gap: 10px;
   }
 
 }
 
-@media (max-width: 1080px) {
+@media (max-width: 1080px){
   .portal-shell {
     display: block;
     padding-bottom: 84px;
@@ -628,7 +628,7 @@ button.brand:hover .brand-cube {
   }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 560px){
   .course-card,
   .course-overlay {
     min-height: 238px;
@@ -677,4 +677,3 @@ button.brand:hover .brand-cube {
   border-radius: inherit;
   background: var(--green);
 }
-
