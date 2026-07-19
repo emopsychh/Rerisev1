@@ -167,7 +167,7 @@ class Lesson(models.Model):
         upload_to="lessons/",
         blank=True,
         null=True,
-        help_text="Загрузите mp4/webm сюда — файл попадёт в backend/media/lessons/. Удобно для локального демо.",
+        help_text="Загрузите mp4/webm — файл попадёт в /media/lessons/ и подставится в ссылку. Имя лучше латиницей без пробелов.",
     )
     video_quality = models.CharField(
         "Качество видео",
@@ -207,10 +207,27 @@ class Lesson(models.Model):
 
     @property
     def resolved_video_url(self) -> str | None:
-        """Локальный файл имеет приоритет над внешней ссылкой."""
+        """Публичный URL для плеера. Файл имеет приоритет над ручной ссылкой."""
         if self.video_file:
-            return self.video_file.url
-        return self.video_url or None
+            url = self.video_file.url or ""
+            if not url:
+                return None
+            # FileField.url обычно "/media/lessons/…"; нормализуем на всякий случай.
+            if url.startswith(("http://", "https://")):
+                return url
+            return url if url.startswith("/") else f"/{url}"
+        url = (self.video_url or "").strip()
+        return url or None
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # После загрузки файла подставляем публичный путь в video_url —
+        # так в админке видно ту же ссылку, что открывает плеер.
+        if self.video_file:
+            public = self.resolved_video_url
+            if public and self.video_url != public:
+                Lesson.objects.filter(pk=self.pk).update(video_url=public)
+                self.video_url = public
 
 
 class LessonResource(models.Model):

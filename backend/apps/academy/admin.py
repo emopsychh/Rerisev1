@@ -161,8 +161,9 @@ class LessonAdmin(ModelAdmin):
             {
                 "fields": ("video_file", "video_url", "video_quality"),
                 "description": (
-                    "Удобнее загрузить файл (mp4) — он сохранится в media/lessons/. "
-                    "Или укажите внешнюю ссылку. Файл важнее ссылки. "
+                    "Удобнее загрузить mp4 в «Файл видео» — он попадёт в /media/lessons/ "
+                    "и ссылка подставится сама. Имя файла лучше латиницей без пробелов. "
+                    "Файл важнее ручной ссылки. "
                     "Тест: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
                 ),
             },

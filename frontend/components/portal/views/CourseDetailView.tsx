@@ -60,11 +60,25 @@ type LessonDetail = {
 };
 
 function resolveMediaUrl(url: string) {
+  if (!url) return url;
   if (/^https?:\/\//i.test(url)) return url;
+
+  const path = url.startsWith("/") ? url : `/${url}`;
+
+  // /media/* отдаёт nginx с того же домена, что и портал — не склеивать с API-хостом.
+  // Иначе при NEXT_PUBLIC_API_URL=http://127.0.0.1:8000/api/v1 плеер бьёт в localhost.
+  if (path.startsWith("/media/") && typeof window !== "undefined") {
+    return `${window.location.origin}${path}`;
+  }
+
   const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
+  if (apiBase.startsWith("/")) {
+    return typeof window !== "undefined" ? `${window.location.origin}${path}` : path;
+  }
   const origin = apiBase.replace(/\/api\/v1\/?$/, "");
-  return `${origin}${url.startsWith("/") ? url : `/${url}`}`;
+  return `${origin}${path}`;
 }
+
 
 // Простой кэш, чтобы при редком remount не мигал полный лоадер.
 const programCache = new Map<string, ProgramDetail>();
