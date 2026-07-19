@@ -99,7 +99,7 @@ def build_dashboard(user) -> dict:
 
     partner = get_partner_profile(user.pk)
     if not partner or not partner.tariff_id:
-        return {"is_partner": False}
+        return _member_dashboard(user)
 
     balance = WalletUpdater.refresh(user)
     caps = get_tariff_caps(partner.tariff_id) or {}
@@ -202,6 +202,73 @@ def build_dashboard(user) -> dict:
         "qualification_week": qualification_week,
         "updates": [_serialize_update(entry) for entry in recent_entries],
         "can_renew": _can_renew(partner),
+    }
+
+
+def _member_dashboard(user) -> dict:
+    """Кабинет до покупки тарифа: Member → Партнёр I."""
+    balance = WalletUpdater.refresh(user)
+    partner_1_name = rank_name("partner_1")
+    return {
+        "is_partner": False,
+        "member_label": "MEMBER",
+        "balance": {
+            "total_usd": float(balance.total_earned_usd),
+            "available_usd": float(balance.available_usd),
+        },
+        "partner": {
+            "tariff_id": None,
+            "tariff_name": None,
+            "is_active": False,
+            "activity_until": None,
+            "current_rank": None,
+            "current_rank_name": "Member",
+            "next_rank": "partner_1",
+            "next_rank_name": partner_1_name,
+        },
+        "team_depth": {"tariff_depth_limit": 0, "levels": []},
+        "metrics": {
+            "weekly_collapsed_pv": {
+                "current": 0,
+                "required": None,
+                "next_rank": partner_1_name,
+            },
+            "binary_legs": {
+                "left_pv": 0,
+                "right_pv": 0,
+                "pending_collapse_pv": 0,
+                "is_frozen": False,
+            },
+            "active_personal_partners": {
+                "current": 0,
+                "required": None,
+                "next_rank": partner_1_name,
+            },
+            "fast_start": {
+                "current": 0,
+                "required": FAST_START_REQUIRED,
+                "reward_usd": float(FAST_START_REWARD),
+                "reward_paid": False,
+            },
+            "available_to_withdraw": {"amount_usd": float(balance.available_usd)},
+        },
+        "qualification_week": {
+            "title": f"Движение к «{partner_1_name}»",
+            "period": None,
+            "week_start": None,
+            "week_end": None,
+            "rows": [
+                {
+                    "label": "Статус",
+                    "current": 0,
+                    "required": 1,
+                    "unit": "тариф",
+                    "hint": "Партнёр I после покупки любого партнёрского тарифа",
+                },
+            ],
+        },
+        "updates": [],
+        "can_renew": False,
     }
 
 

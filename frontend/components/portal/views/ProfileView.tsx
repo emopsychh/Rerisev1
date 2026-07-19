@@ -40,7 +40,10 @@ export function ProfileView({ t, notify, setActive, onRenew }: { t: TFn; notify:
     || (partnerFromHome?.tariff_id || partnerFromDash?.tariff_id
       ? tariffDisplayName(partnerFromHome?.tariff_id || partnerFromDash?.tariff_id)
       : t("Не оформлен"));
-  const rankLabel = partnerFromDash?.current_rank_name || partnerFromHome?.current_rank_name || t("Не присвоен");
+  const hasTariff = Boolean(partnerFromHome?.tariff_id || partnerFromDash?.tariff_id);
+  const rankLabel = hasTariff
+    ? (partnerFromDash?.current_rank_name || partnerFromHome?.current_rank_name || t("Партнёр I"))
+    : (partnerFromDash?.current_rank_name || t("Member"));
   const activityUntil = formatApiDate(partnerFromDash?.activity_until, "—");
   const isActive = partnerFromHome?.is_active ?? partnerFromDash?.is_active ?? false;
   const currentDevice = describeCurrentDevice();

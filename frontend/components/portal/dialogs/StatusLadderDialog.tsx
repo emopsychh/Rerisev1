@@ -25,6 +25,8 @@ function rankIndexByName(name?: string | null): number {
 export function StatusLadderDialog({ onClose, t }: { onClose: () => void; t: TFn }) {
   const { dashboard } = usePortalBackend();
   const partner = dashboard?.partner as {
+    tariff_id?: string | null;
+    current_rank?: string | null;
     current_rank_name?: string;
     next_rank_name?: string;
   } | undefined;
@@ -32,23 +34,32 @@ export function StatusLadderDialog({ onClose, t }: { onClose: () => void; t: TFn
     weekly_collapsed_pv?: { current?: number; required?: number; next_rank?: string };
   } | undefined;
 
-  const currentRankIndex = rankIndexByName(partner?.current_rank_name);
-  const nextRankIndex = Math.min(PARTNER_RANKS.length - 1, currentRankIndex + 1);
+  const isPartner = dashboard?.is_partner === true && Boolean(partner?.tariff_id);
+  // Без тарифа текущий статус — Member (ещё не на лестнице PARTNER_RANKS).
+  const currentRankIndex = isPartner ? rankIndexByName(partner?.current_rank_name) : -1;
+  const nextRankIndex = isPartner
+    ? Math.min(PARTNER_RANKS.length - 1, currentRankIndex + 1)
+    : 0;
   const weeklyCollapsedPv = Number(metrics?.weekly_collapsed_pv?.current ?? 0);
-  const nextRankRequired = Number(
-    metrics?.weekly_collapsed_pv?.required ?? PARTNER_RANKS[nextRankIndex].weeklyCollapsedPv,
-  ) || PARTNER_RANKS[nextRankIndex].weeklyCollapsedPv;
-  const currentRankName = partner?.current_rank_name || PARTNER_RANKS[currentRankIndex].name;
-  const nextRankName =
-    metrics?.weekly_collapsed_pv?.next_rank
-    || partner?.next_rank_name
-    || PARTNER_RANKS[nextRankIndex].name;
-  const progressPct = nextRankRequired > 0
+  const nextRankRequired = isPartner
+    ? (Number(
+        metrics?.weekly_collapsed_pv?.required ?? PARTNER_RANKS[nextRankIndex].weeklyCollapsedPv,
+      ) || PARTNER_RANKS[nextRankIndex].weeklyCollapsedPv)
+    : 0;
+  const currentRankName = isPartner
+    ? (partner?.current_rank_name || PARTNER_RANKS[Math.max(0, currentRankIndex)].name)
+    : "Member";
+  const nextRankName = isPartner
+    ? (metrics?.weekly_collapsed_pv?.next_rank
+      || partner?.next_rank_name
+      || PARTNER_RANKS[nextRankIndex].name)
+    : (partner?.next_rank_name || "Партнёр I");
+  const progressPct = isPartner && nextRankRequired > 0
     ? Math.min(100, Math.round((weeklyCollapsedPv / nextRankRequired) * 100))
-    : 100;
+    : 0;
 
   const [selectedRank, setSelectedRank] = useState<number | null>(null);
-  const activeRank = selectedRank ?? (currentRankIndex < PARTNER_RANKS.length - 1 ? nextRankIndex : currentRankIndex);
+  const activeRank = selectedRank ?? nextRankIndex;
 
   const selectedGroup = useMemo(
     () => RANK_GROUPS.find((group) => activeRank >= group.start && activeRank < group.end) ?? RANK_GROUPS[0],
@@ -62,9 +73,9 @@ export function StatusLadderDialog({ onClose, t }: { onClose: () => void; t: TFn
       : `Нужны ${RANK_QUALIFICATION_RULES.binaryLegQualifierRanks.distinctPartners} разных активных квалификатора: по одному в каждой бинарной ноге, на любой физической глубине, уже имеющие требуемый статус.`;
 
   const rankState = (index: number) => {
-    if (index < currentRankIndex) return "achieved" as const;
-    if (index === currentRankIndex) return "current" as const;
-    if (index === nextRankIndex && currentRankIndex < PARTNER_RANKS.length - 1) return "next" as const;
+    if (currentRankIndex >= 0 && index < currentRankIndex) return "achieved" as const;
+    if (currentRankIndex >= 0 && index === currentRankIndex) return "current" as const;
+    if (index === nextRankIndex) return "next" as const;
     return "future" as const;
   };
 
@@ -84,9 +95,11 @@ export function StatusLadderDialog({ onClose, t }: { onClose: () => void; t: TFn
         <div>
           <span>{t("Следующая ступень")}</span>
           <strong>
-            {currentRankIndex >= PARTNER_RANKS.length - 1
-              ? t("Максимум")
-              : `${weeklyCollapsedPv} / ${nextRankRequired} PV · ${t(nextRankName)}`}
+            {!isPartner
+              ? t(nextRankName)
+              : currentRankIndex >= PARTNER_RANKS.length - 1
+                ? t("Максимум")
+                : `${weeklyCollapsedPv} / ${nextRankRequired} PV · ${t(nextRankName)}`}
           </strong>
         </div>
       </div>

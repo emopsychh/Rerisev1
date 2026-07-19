@@ -345,12 +345,41 @@ class StatusQualificationService:
 
 class FastStartService:
     @staticmethod
+    def _is_eligible_tariff(tariff_id: str | None) -> bool:
+        if not tariff_id:
+            return False
+        caps = get_tariff_caps(tariff_id)
+        if caps is not None:
+            return bool(caps.get("quick_start_eligible"))
+        return tariff_id in FAST_START_TARIFFS
+
+    @staticmethod
+    def _first_paid_tariff_slug(user_id: int) -> str | None:
+        from apps.commerce.models import Order, Product
+
+        first = (
+            Order.objects.filter(
+                user_id=user_id,
+                order_type=Order.TYPE_PURCHASE,
+                status=Order.STATUS_PAID,
+                product__type=Product.TYPE_TARIFF,
+            )
+            .order_by("paid_at", "pk")
+            .values_list("product__slug", flat=True)
+            .first()
+        )
+        return first
+
+    @staticmethod
     def ensure_window(sponsor: PartnerProfile) -> FastStart | None:
-        if sponsor.tariff_id not in FAST_START_TARIFFS:
+        if not FastStartService._is_eligible_tariff(sponsor.tariff_id):
             return None
-        # Окно отсчитывается от первой покупки партнёрского тарифа спонсором
-        # (placed_at выставляется при первом размещении в бинаре), а не от
-        # первого приглашения. Апгрейд Rise → Pro окно не перезапускает.
+        # Rise → Pro не открывает быстрый старт задним числом
+        # (retroactiveEligibilityAfterOwnUpgrade = false).
+        first_slug = FastStartService._first_paid_tariff_slug(sponsor.user_id)
+        if first_slug and not FastStartService._is_eligible_tariff(first_slug):
+            return None
+        # Окно от первой покупки Pro/Max (placed_at), апгрейд Pro→Max не перезапускает.
         anchor = sponsor.placed_at or sponsor.created_at
         fs, _ = FastStart.objects.get_or_create(
             partner=sponsor,
@@ -363,7 +392,9 @@ class FastStartService:
 
     @staticmethod
     def track_invite(sponsor: PartnerProfile, invited: PartnerProfile, order) -> None:
-        if sponsor.tariff_id not in FAST_START_TARIFFS:
+        if not FastStartService._is_eligible_tariff(sponsor.tariff_id):
+            return
+        if not FastStartService._is_eligible_tariff(invited.tariff_id):
             return
 
         fs = FastStartService.ensure_window(sponsor)
@@ -372,14 +403,21 @@ class FastStartService:
         if timezone.now() > fs.window_end:
             return
 
-        # Пересчёт: личные Pro/Max, размещённые в окне (включая Rise→Pro апгрейд).
         fs = FastStart.objects.select_for_update().get(pk=fs.pk)
         if fs.reward_paid:
             return
 
+        from apps.commerce.models import TariffPlan
+
+        eligible_slugs = list(
+            TariffPlan.objects.filter(quick_start_eligible=True).values_list(
+                "tariff_id", flat=True
+            )
+        ) or list(FAST_START_TARIFFS)
+
         count = SponsorLink.objects.filter(
             sponsor=sponsor,
-            partner__tariff_id__in=FAST_START_TARIFFS,
+            partner__tariff_id__in=eligible_slugs,
             partner__placed_at__gte=fs.window_start,
             partner__placed_at__lte=fs.window_end,
         ).count()

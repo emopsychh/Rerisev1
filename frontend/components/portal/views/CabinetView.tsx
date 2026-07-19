@@ -15,9 +15,13 @@ export function CabinetView({ setActive, t, notify, onInvite, onOpenRanks }: { s
   const { user } = useAuth();
   const { dashboard, wallet, ready } = usePortalBackend();
   const [teamVisible, setTeamVisible] = useState(false);
-  const isPartner = dashboard?.is_partner !== false && Boolean(dashboard?.partner || dashboard?.is_partner);
+  const isPartner = dashboard?.is_partner === true && Boolean(
+    (dashboard?.partner as { tariff_id?: string } | undefined)?.tariff_id,
+  );
   const partner = dashboard?.partner as {
+    tariff_id?: string | null;
     tariff_name?: string;
+    current_rank?: string | null;
     current_rank_name?: string;
     next_rank_name?: string;
     activity_until?: string;
@@ -44,7 +48,7 @@ export function CabinetView({ setActive, t, notify, onInvite, onOpenRanks }: { s
     ? Math.min(100, Math.round((personalCurrent / personalRequired) * 100))
     : 0;
   const fastStart = metrics?.fast_start;
-  const rankProgress = nextRankRequired > 0
+  const rankProgress = isPartner && nextRankRequired > 0
     ? Math.min(100, Math.round((weeklyCollapsedPv / nextRankRequired) * 100))
     : 0;
   const binaryIncomeRow = Array.isArray(qualification?.rows)
@@ -61,9 +65,14 @@ export function CabinetView({ setActive, t, notify, onInvite, onOpenRanks }: { s
       ?? 0,
   );
   const displayName = [user?.first_name, user?.last_name].filter(Boolean).join(" ") || "Партнёр";
-  const currentRankName = partner?.current_rank_name || "—";
-  const nextRankName = metrics?.weekly_collapsed_pv?.next_rank || partner?.next_rank_name || "—";
-  const activityUntil = formatApiDate(partner?.activity_until, "—");
+  // Без тарифа: Member → Партнёр I. С тарифом: текущий ранг → следующий.
+  const currentRankName = isPartner
+    ? (partner?.current_rank_name || "Партнёр I")
+    : "Member";
+  const nextRankName = isPartner
+    ? (metrics?.weekly_collapsed_pv?.next_rank || partner?.next_rank_name || "—")
+    : (partner?.next_rank_name || metrics?.weekly_collapsed_pv?.next_rank || "Партнёр I");
+  const activityUntil = isPartner ? formatApiDate(partner?.activity_until, "—") : "—";
   const [qualificationTimeLeft, setQualificationTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
@@ -170,7 +179,9 @@ export function CabinetView({ setActive, t, notify, onInvite, onOpenRanks }: { s
                 <strong>{weeklyCollapsedPv} / {nextRankRequired || "—"} <small>PV</small></strong>
                 <i><b style={{ width: `${rankProgress}%` }} /></i>
                 <small>
-                  {nextRankRequired > 0
+                  {!isPartner
+                    ? t("Партнёр I после покупки любого партнёрского тарифа")
+                    : nextRankRequired > 0
                     ? leftPv + rightPv > 0 && weeklyCollapsedPv === 0
                       ? `${t("В ногах")}: L ${leftPv} · R ${rightPv} PV · ${t("схлоп при объёме в обеих")}`
                       : `${t("Осталось")} ${Math.max(0, nextRankRequired - weeklyCollapsedPv)} PV`

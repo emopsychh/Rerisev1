@@ -52,7 +52,11 @@ class PartnerStructureView(APIView):
             depth = int(request.query_params.get("depth", 3))
         except (TypeError, ValueError):
             depth = 3
-        depth = max(1, min(depth, 15))
+        from apps.commerce.selectors import get_tariff_caps
+
+        caps = get_tariff_caps(partner.tariff_id) if partner.tariff_id else None
+        max_depth = int(caps["binary_depth"]) if caps else 15
+        depth = max(1, min(depth, max_depth))
 
         return success_response(build_structure(partner, leg=leg, depth=depth))
 

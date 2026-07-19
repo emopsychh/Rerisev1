@@ -301,6 +301,87 @@ class FastStartTests(BonusEngineTestMixin, TestCase):
         )
         self.assertFalse(FastStart.objects.filter(partner=sponsor).exists())
 
+    def test_tc_fs_03_rise_then_upgrade_no_retroactive_fast_start(self):
+        """Апгрейд Rise→Pro не открывает быстрый старт задним числом."""
+        sponsor = self.join("a@t.ai", "rise")
+        code = self.referral_code(sponsor)
+        self.login_user("a@t.ai")
+        self.buy_tariff("rise-pro", order_type="upgrade")
+
+        for index in range(4):
+            self.join(f"inv{index}@t.ai", "rise-pro", sponsor_code=code)
+
+        self.assertEqual(
+            self.sum_entries(sponsor.user, ENTRY_TYPE_FAST_START_BONUS), Decimal("0")
+        )
+        self.assertFalse(FastStart.objects.filter(partner=sponsor).exists())
+
+
+class TariffDepthMatchingTests(BonusEngineTestMixin, TestCase):
+    def setUp(self):
+        self._seed()
+
+    def test_rise_binary_depth_stops_at_level_3(self):
+        """Rise (depth 3): PV на L1–L3, на L4 не начисляется."""
+        from apps.partner.models import BinaryPlacement
+
+        # Цепочка: L4(rise) → L3 → L2 → L1 → buyer
+        root = self.join("depth-root@t.ai", "rise")
+        n3 = self.join("depth-l3@t.ai", "rise", sponsor_code=self.referral_code(root))
+        n2 = self.join("depth-l2@t.ai", "rise", sponsor_code=self.referral_code(n3))
+        n1 = self.join("depth-l1@t.ai", "rise", sponsor_code=self.referral_code(n2))
+
+        level = 0
+        current = BinaryPlacement.objects.get(partner=n1)
+        while current.parent_id is not None:
+            level += 1
+            current = BinaryPlacement.objects.get(partner=current.parent)
+        self.assertEqual(level, 3)
+
+        root_balance = BinaryBalance.objects.get(partner=root)
+        before = (
+            root_balance.left_pv,
+            root_balance.right_pv,
+            self.sum_entries(root.user, ENTRY_TYPE_BINARY_COLLAPSE, currency="PV"),
+            self.sum_entries(root.user, ENTRY_TYPE_BINARY_BONUS),
+        )
+
+        buyer = self.join("depth-buyer@t.ai", "rise", sponsor_code=self.referral_code(n1))
+        level = 0
+        current = BinaryPlacement.objects.get(partner=buyer)
+        while current.parent_id is not None:
+            level += 1
+            current = BinaryPlacement.objects.get(partner=current.parent)
+        self.assertEqual(level, 4)
+
+        root_balance.refresh_from_db()
+        after = (
+            root_balance.left_pv,
+            root_balance.right_pv,
+            self.sum_entries(root.user, ENTRY_TYPE_BINARY_COLLAPSE, currency="PV"),
+            self.sum_entries(root.user, ENTRY_TYPE_BINARY_BONUS),
+        )
+        self.assertEqual(after, before)
+
+        # L1 получает PV от покупки buyer
+        n1_balance = BinaryBalance.objects.get(partner=n1)
+        n1_got_pv = (
+            self.sum_entries(n1.user, ENTRY_TYPE_BINARY_COLLAPSE, currency="PV") > 0
+            or (n1_balance.left_pv + n1_balance.right_pv) > 0
+        )
+        self.assertTrue(n1_got_pv)
+
+    def test_rise_matching_only_line_1(self):
+        """Rise matching_lines=1: линия 2 не платится."""
+        line2 = self.join("match-l2@t.ai", "rise")
+        line1 = self.join("match-l1@t.ai", "rise-pro", sponsor_code=self.referral_code(line2))
+        earner = self.join("match-earner@t.ai", "rise", sponsor_code=self.referral_code(line1))
+
+        MatchingBonusService.process(earner, Decimal("22"), None)
+
+        self.assertEqual(self.sum_entries(line1.user, ENTRY_TYPE_MATCHING_BONUS), Decimal("2.20"))
+        self.assertEqual(self.sum_entries(line2.user, ENTRY_TYPE_MATCHING_BONUS), Decimal("0"))
+
 
 class StatusQualificationTests(BonusEngineTestMixin, TestCase):
     def setUp(self):
@@ -369,6 +450,18 @@ class ActivityExpirationTests(BonusEngineTestMixin, TestCase):
 class PartnerDashboardApiTests(BonusEngineTestMixin, TestCase):
     def setUp(self):
         self._seed()
+
+    def test_member_without_tariff_shows_member_then_partner_1(self):
+        self.register_user("member-only@t.ai", first_name="Member", last_name="Only")
+        self.login_user("member-only@t.ai")
+
+        dashboard = self.client.get("/api/v1/partner/dashboard")
+        self.assertEqual(dashboard.status_code, 200)
+        data = dashboard.data["data"]
+        self.assertFalse(data["is_partner"])
+        self.assertEqual(data["partner"]["current_rank_name"], "Member")
+        self.assertEqual(data["partner"]["next_rank_name"], "Партнёр I")
+        self.assertEqual(data["metrics"]["weekly_collapsed_pv"]["next_rank"], "Партнёр I")
 
     def test_dashboard_ranks_structure_endpoints(self):
         sponsor = self.join("a@t.ai", "rise-pro")
