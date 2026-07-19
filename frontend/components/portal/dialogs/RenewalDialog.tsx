@@ -9,6 +9,7 @@ import { PARTNER_TIERS, SUBSCRIPTION_RULES, type PartnerTierId } from "../../../
 import { formatApiDate } from "../../../lib/portal";
 import type { NotifyFn, TFn } from "../../../lib/portal/types";
 import { PortalDialog } from "../shared/PortalDialog";
+import { PurchaseSuccessPanel, type PurchaseSuccessInfo } from "../shared/PurchaseSuccessPanel";
 
 function pvDepthForTier(tariffId?: string | null): number {
   if (tariffId && tariffId in SUBSCRIPTION_RULES.pvDepthByTier) {
@@ -19,8 +20,9 @@ function pvDepthForTier(tariffId?: string | null): number {
 
 export function RenewalDialog({ onClose, notify, t }: { onClose: () => void; notify: NotifyFn; t: TFn }) {
   const { dashboard, wallet, reload } = usePortalBackend();
-  const [isConfirmationStep, setIsConfirmationStep] = useState(false);
+  const [step, setStep] = useState<"details" | "confirm" | "success">("details");
   const [submitting, setSubmitting] = useState(false);
+  const [successInfo, setSuccessInfo] = useState<PurchaseSuccessInfo | null>(null);
 
   const partner = dashboard?.partner as {
     tariff_id?: string;
@@ -52,16 +54,23 @@ export function RenewalDialog({ onClose, notify, t }: { onClose: () => void; not
     try {
       const order = await renewPartner();
       const paidFromWallet = order.status === "paid" && order.payment?.provider === "wallet";
-      if (paidFromWallet) {
-        notify(t("Активность продлена с баланса"));
-      } else if (order.payment?.payment_url) {
+      if (!paidFromWallet && order.payment?.payment_url) {
         window.open(order.payment.payment_url, "_blank", "noopener,noreferrer");
-        notify(t("Заявка на продление создана. Завершите оплату."));
-      } else {
-        notify(order.payment?.instructions || t("Заявка на продление оформлена"));
       }
+      setSuccessInfo({
+        headline: paidFromWallet ? "Активность продлена" : "Заявка на продление создана",
+        message: paidFromWallet
+          ? "Оплата с баланса прошла успешно. Срок активности удлинён на месяц."
+          : "Заказ создан. Завершите оплату по счёту — после этого активность продлится.",
+        status: paidFromWallet ? "Оплачено" : "Ожидает оплаты",
+        amount: `$${priceUsd}`,
+        orderId: order.order_id,
+        paymentHint: paidFromWallet
+          ? null
+          : "Внешний счёт открыт в новой вкладке, если браузер не заблокировал окно.",
+      });
+      setStep("success");
       await reload();
-      onClose();
     } catch (error) {
       const message = error instanceof ApiError ? error.message : t("Не удалось оформить продление");
       notify(message);
@@ -70,9 +79,18 @@ export function RenewalDialog({ onClose, notify, t }: { onClose: () => void; not
     }
   };
 
+  const dialogTitle =
+    step === "success"
+      ? t("Готово")
+      : step === "confirm"
+        ? t("Подтверждение")
+        : t("Продление активности");
+
   return (
-    <PortalDialog title={t("Продление активности")} eyebrow={t("Партнёрская подписка")} onClose={onClose} className="renewal-dialog" closeLabel={t("Закрыть")}>
-      {!isConfirmationStep ? (
+    <PortalDialog title={dialogTitle} eyebrow={t("Партнёрская подписка")} onClose={onClose} className="renewal-dialog" closeLabel={t("Закрыть")}>
+      {step === "success" && successInfo ? (
+        <PurchaseSuccessPanel info={successInfo} t={t} onDone={onClose} />
+      ) : step === "details" ? (
         <>
           <section className="renewal-summary">
             <div className="renewal-plan-icon"><RefreshCw size={24} /></div>
@@ -104,7 +122,7 @@ export function RenewalDialog({ onClose, notify, t }: { onClose: () => void; not
           </section>
           <footer className="portal-dialog-actions">
             <button type="button" onClick={onClose}>{t("Отмена")}</button>
-            <button type="button" disabled={!canRenew} onClick={() => setIsConfirmationStep(true)}>
+            <button type="button" disabled={!canRenew} onClick={() => setStep("confirm")}>
               {t("Перейти к подтверждению")}<ChevronRight size={17} />
             </button>
           </footer>
@@ -122,7 +140,7 @@ export function RenewalDialog({ onClose, notify, t }: { onClose: () => void; not
           <div><span>{t("Оплата")}</span><strong>{canPayWallet ? t("С баланса") : t("Внешний счёт / баланс")}</strong></div>
           <div><span>{t("Подписочный PV")}</span><strong>{SUBSCRIPTION_RULES.generatedPv} PV · {t(`до ${pvDepth} физических уровней`)}</strong></div>
           <footer className="portal-dialog-actions">
-            <button type="button" disabled={submitting} onClick={() => setIsConfirmationStep(false)}>{t("Назад")}</button>
+            <button type="button" disabled={submitting} onClick={() => setStep("details")}>{t("Назад")}</button>
             <button type="button" disabled={submitting || !canRenew} onClick={() => void submitRenewal()}>
               {submitting
                 ? t("Оформляем…")

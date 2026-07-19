@@ -609,6 +609,7 @@
 .purchase-ready > div { display: flex; width: min(460px, 100%); justify-content: space-between; gap: 16px; border-top: 1px solid rgba(255, 255, 255, 0.07); padding: 11px 0; color: rgba(247, 247, 243, 0.46); }
 .purchase-ready > div strong { color: rgba(247, 247, 243, 0.82); }
 .purchase-ready > button { min-width: 160px; min-height: 46px; margin-top: 18px; border-radius: 14px; background: rgba(247, 247, 243, 0.94); color: #101313; font-weight: 700; }
+.purchase-success-hint { margin-top: 8px !important; margin-bottom: 0 !important; font-size: 13px; }
 
 .renewal-dialog { width: min(760px, calc(100vw - 32px)); }
 .renewal-summary { display: grid; grid-template-columns: 58px minmax(0, 1fr) auto; align-items: center; gap: 15px; border: 1px solid rgba(143,214,223,.14); border-radius: 20px; background: linear-gradient(145deg, rgba(143,214,223,.07), rgba(255,255,255,.025)); padding: 17px; }

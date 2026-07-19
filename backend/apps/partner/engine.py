@@ -108,6 +108,16 @@ class PvDistributionService:
         if pv_amount <= 0:
             return
 
+        # PV покупателя фиксируем всегда (даже если бинар ещё не размещён).
+        LedgerWriter.credit(
+            buyer.user,
+            buyer_entry_type,
+            pv_amount,
+            CURRENCY_PV,
+            source=order,
+            idempotency_key=f"order:{order.id}:{buyer_entry_type}:buyer",
+        )
+
         placement = BinaryPlacement.objects.filter(partner=buyer).first()
         if placement is None:
             return
@@ -132,15 +142,6 @@ class PvDistributionService:
             if next_placement is None:
                 break
             current = next_placement
-
-        LedgerWriter.credit(
-            buyer.user,
-            buyer_entry_type,
-            pv_amount,
-            CURRENCY_PV,
-            source=order,
-            idempotency_key=f"order:{order.id}:{buyer_entry_type}:buyer",
-        )
 
 
 class BinaryCollapseService:

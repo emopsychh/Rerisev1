@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Check, CheckCircle2, ChevronRight, ShieldCheck, Sparkles, Zap } from "lucide-react";
+import { Check, ChevronRight, ShieldCheck, Sparkles, Zap } from "lucide-react";
 import { usePortalBackend } from "../../../lib/auth/PortalBackendProvider";
 import { createOrder } from "../../../lib/api/store";
 import { ApiError } from "../../../lib/api/types";
@@ -11,6 +11,7 @@ import type { MarketOffer, MarketTab, NotifyFn, TFn } from "../../../lib/portal"
 import { PageShell } from "../shared/PageShell";
 import { PortalDialog } from "../shared/PortalDialog";
 import { PortalLoading } from "../shared/PortalLoading";
+import { PurchaseSuccessPanel, type PurchaseSuccessInfo } from "../shared/PurchaseSuccessPanel";
 
 const TARIFF_RANK: Record<string, number> = {
   rise: 1,
@@ -30,7 +31,8 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
   const [selectedOffer, setSelectedOffer] = useState<MarketOffer | null>(null);
   const [purchaseStep, setPurchaseStep] = useState<"details" | "ready">("details");
   const [ordering, setOrdering] = useState(false);
-  const [lastPaidFromWallet, setLastPaidFromWallet] = useState(false);
+  const [successInfo, setSuccessInfo] = useState<PurchaseSuccessInfo | null>(null);
+  const successLockedRef = useRef(false);
 
   const availableUsd = Number(
     (wallet?.balance as { available_usd?: number } | undefined)?.available_usd ?? 0,
@@ -104,26 +106,61 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
     0,
   );
 
+  const buildSuccessInfo = (
+    offer: MarketOffer,
+    order: { order_id: number; status: string; payment?: { provider?: string; payment_url?: string | null } },
+    orderType: string,
+  ): PurchaseSuccessInfo => {
+    const paidFromWallet = order.status === "paid" && order.payment?.provider === "wallet";
+    if (offer.kind === "tokens") {
+      return {
+        headline: paidFromWallet ? "Токены зачислены" : "Заказ токенов создан",
+        message: paidFromWallet
+          ? "Оплата с баланса прошла успешно. Токены уже на балансе AI Hub."
+          : "Заказ создан. Завершите оплату по счёту — после этого токены появятся в AI Hub.",
+        status: paidFromWallet ? "Оплачено" : "Ожидает оплаты",
+        amount: offer.price,
+        orderId: order.order_id,
+        paymentHint: paidFromWallet ? null : "Внешний счёт открыт в новой вкладке, если браузер не заблокировал окно.",
+      };
+    }
+    if (orderType === "upgrade") {
+      return {
+        headline: paidFromWallet ? "Апгрейд выполнен" : "Заявка на апгрейд создана",
+        message: paidFromWallet
+          ? `${offer.title} активирован. Срок текущей активности сохранён.`
+          : `Заказ на апгрейд до ${offer.title} создан. Оплатите счёт, чтобы завершить переход.`,
+        status: paidFromWallet ? "Оплачено" : "Ожидает оплаты",
+        amount: offer.price,
+        orderId: order.order_id,
+        paymentHint: paidFromWallet ? null : "Внешний счёт открыт в новой вкладке, если браузер не заблокировал окно.",
+      };
+    }
+    return {
+      headline: paidFromWallet ? "Тариф активирован" : "Заказ тарифа создан",
+      message: paidFromWallet
+        ? `${offer.title} оплачен с баланса и уже активен.`
+        : `Заказ на ${offer.title} создан. Оплатите счёт, чтобы активировать доступ.`,
+      status: paidFromWallet ? "Оплачено" : "Ожидает оплаты",
+      amount: offer.price,
+      orderId: order.order_id,
+      paymentHint: paidFromWallet ? null : "Внешний счёт открыт в новой вкладке, если браузер не заблокировал окно.",
+    };
+  };
+
   const placeOrder = async (productId: string, orderType = "purchase") => {
+    if (!selectedOffer) return;
     setOrdering(true);
     try {
       const order = await createOrder(productId, orderType);
       const paidFromWallet = order.status === "paid" && order.payment?.provider === "wallet";
-      setLastPaidFromWallet(paidFromWallet);
-      if (paidFromWallet) {
-        notify(
-          selectedOffer?.kind === "tokens"
-            ? t(`Токены зачислены · заказ #${order.order_id}`)
-            : t(`Оплачено с баланса · заказ #${order.order_id}`),
-        );
-      } else {
-        notify(t(`Заказ #${order.order_id} создан (${order.status})`));
-        if (order.payment?.payment_url) {
-          window.open(order.payment.payment_url, "_blank", "noopener,noreferrer");
-        }
+      if (!paidFromWallet && order.payment?.payment_url) {
+        window.open(order.payment.payment_url, "_blank", "noopener,noreferrer");
       }
-      await reload();
+      successLockedRef.current = true;
+      setSuccessInfo(buildSuccessInfo(selectedOffer, order, orderType));
       setPurchaseStep("ready");
+      await reload();
     } catch (err) {
       notify(err instanceof ApiError ? err.message : t("Не удалось создать заказ"));
     } finally {
@@ -132,14 +169,17 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
   };
 
   const openOffer = (offer: MarketOffer) => {
+    successLockedRef.current = false;
+    setSuccessInfo(null);
     setSelectedOffer(offer);
     setPurchaseStep("details");
-    setLastPaidFromWallet(false);
     router.push(marketOfferHref(offer), { scroll: false });
   };
 
   const closeOffer = () => {
     const returnTab = selectedOffer?.kind === "package" ? "packages" : selectedOffer?.kind === "tokens" ? "tokens" : "programs";
+    successLockedRef.current = false;
+    setSuccessInfo(null);
     setSelectedOffer(null);
     setPurchaseStep("details");
     router.push(`/market/${returnTab}`, { scroll: false });
@@ -148,8 +188,11 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
   useEffect(() => {
     const match = pathname.match(/^\/market\/(programs|packages|tokens)\/([^/]+)$/);
     if (!match) {
-      setSelectedOffer(null);
-      setPurchaseStep("details");
+      if (!successLockedRef.current) {
+        setSelectedOffer(null);
+        setPurchaseStep("details");
+        setSuccessInfo(null);
+      }
       return;
     }
     const [, group, slug] = match;
@@ -166,7 +209,10 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
           features: pack.features,
           productId: pack.productId,
         });
-        setPurchaseStep("details");
+        if (!successLockedRef.current) {
+          setPurchaseStep("details");
+          setSuccessInfo(null);
+        }
       }
       return;
     }
@@ -185,12 +231,19 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
           features: pack.features,
           productId: pack.productId,
         });
-        setPurchaseStep("details");
+        // После оплаты reload() обновляет tariffs — не сбрасывать экран успеха.
+        if (!successLockedRef.current) {
+          setPurchaseStep("details");
+          setSuccessInfo(null);
+        }
       }
       return;
     }
-    setSelectedOffer(null);
-    setPurchaseStep("details");
+    if (!successLockedRef.current) {
+      setSelectedOffer(null);
+      setPurchaseStep("details");
+      setSuccessInfo(null);
+    }
   }, [pathname, tariffs, tokens]);
 
   if (!ready) {
@@ -336,7 +389,7 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
 
       {selectedOffer ? (
         <PortalDialog
-          title={purchaseStep === "details" ? t("Подтверждение доступа") : t("Запрос подготовлен")}
+          title={purchaseStep === "details" ? t("Подтверждение доступа") : t("Готово")}
           eyebrow={selectedOffer.kind === "program" ? t("Программа RE:RISE") : selectedOffer.kind === "package" ? t("Пакет доступа") : t("Токены AI Hub")}
           onClose={closeOffer}
           className="purchase-dialog"
@@ -417,8 +470,13 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
                           await placeOrder(productId, "purchase");
                           return;
                         }
+                        successLockedRef.current = true;
+                        setSuccessInfo({
+                          headline: "Заявка принята",
+                          message: "Мы сообщим, когда будут утверждены цена, состав доступа и способ оплаты программы.",
+                          status: "Условия в проработке",
+                        });
                         setPurchaseStep("ready");
-                        notify(t("Уведомление о запуске программы включено"));
                       }}>{selectedOffer.kind === "package" || selectedOffer.kind === "tokens"
                         ? (canPayWallet
                           ? t("Оплатить с баланса")
@@ -431,23 +489,19 @@ export function MarketplaceView({ t, notify, marketTab }: { t: TFn; notify: Noti
                 );
               })()}
             </>
+          ) : successInfo ? (
+            <PurchaseSuccessPanel info={successInfo} t={t} onDone={closeOffer} />
           ) : (
-            <div className="purchase-ready">
-              <span><CheckCircle2 size={34} /></span>
-              <h3>{t(selectedOffer.title)}</h3>
-              <p>{selectedOffer.kind === "package"
-                ? (lastPaidFromWallet
-                  ? t("Тариф оплачен с баланса и уже активен.")
-                  : t("Заказ тарифа создан. Оплатите счёт, чтобы активировать доступ."))
-                : selectedOffer.kind === "program"
-                  ? t("Мы сообщим, когда будут утверждены цена, состав доступа и способ оплаты программы.")
-                  : (lastPaidFromWallet
-                    ? t("Токены уже на балансе AI Hub.")
-                    : t("Оплатите внешний счёт — после оплаты токены появятся в AI Hub."))}</p>
-              <div><span>{t("Статус")}</span><strong>{selectedOffer.kind === "program" ? t("Условия в проработке") : (lastPaidFromWallet ? t("Оплачено") : t("Заказ обработан"))}</strong></div>
-              {selectedOffer.kind === "package" || selectedOffer.kind === "tokens" ? <div><span>{t("Стоимость")}</span><strong>{selectedOffer.price}</strong></div> : null}
-              <button onClick={closeOffer}>{t("Готово")}</button>
-            </div>
+            <PurchaseSuccessPanel
+              info={{
+                headline: selectedOffer.title,
+                message: "Операция завершена.",
+                status: "Готово",
+                amount: selectedOffer.kind === "package" || selectedOffer.kind === "tokens" ? selectedOffer.price : undefined,
+              }}
+              t={t}
+              onDone={closeOffer}
+            />
           )}
         </PortalDialog>
       ) : null}
