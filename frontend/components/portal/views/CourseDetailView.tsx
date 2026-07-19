@@ -319,7 +319,7 @@ export function CourseDetailView({
             <h2>{t(program.title)}</h2>
             <p>{t(program.description || "")}</p>
             <div className="detail-hero-facts">
-              <span><Lock size={15} />{requiredName ? t(`Нужен ${requiredName}`) : t("Закрыто")}</span>
+              <span><Lock size={15} />{requiredName ? t(`Нужен тариф ${requiredName}`) : t("Закрыто")}</span>
               <span><BookOpen size={15} />{program.module_count} {t("модулей")}</span>
               <span><Play size={15} />{program.lesson_count} {t("уроков")}</span>
             </div>

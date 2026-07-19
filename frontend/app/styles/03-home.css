@@ -534,74 +534,78 @@
 .course-commercial-tags {
   display: flex;
   min-width: 0;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
 }
 
 .course-commercial-tags em,
-.course-commercial-tags span {
+.course-commercial-tags span,
+.course-need-tariff {
   display: inline-flex;
-  min-height: 25px;
+  min-height: 26px;
+  max-width: 100%;
   align-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  gap: 6px;
+  border: 1px solid rgba(143, 214, 223, 0.22);
   border-radius: 999px;
-  padding: 0 8px;
+  background: rgba(143, 214, 223, 0.1);
+  color: #b6edf0;
+  padding: 0 10px;
   font-size: 12px;
   font-style: normal;
   font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
   white-space: nowrap;
 }
 
 .course-commercial-tags em {
+  border-color: rgba(255, 194, 89, 0.22);
   background: rgba(255, 194, 89, 0.12);
   color: #ffd08a;
 }
 
-.course-commercial-tags span {
-  background: rgba(143, 214, 223, 0.09);
-  color: #a9e5eb;
+.course-topline em.course-need-tariff {
+  border-color: rgba(143, 214, 223, 0.22);
+  background: rgba(143, 214, 223, 0.1);
+  color: #b6edf0;
+}
+
+.course-need-tariff svg {
+  flex: 0 0 auto;
+  opacity: 0.9;
 }
 
 .program-purchase-bottom.course-bottom {
-  grid-template-columns: minmax(0, 1fr) auto;
+  display: flex;
+  grid-template-columns: none;
   align-items: center;
+  justify-content: flex-end;
   gap: 12px;
-}
-
-.program-card-price {
-  display: inline-flex;
-  min-height: 40px;
-  min-width: 0;
-  align-items: center;
-  justify-self: start;
-}
-
-.program-card-price strong {
-  color: rgba(247, 247, 243, 0.92);
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 1;
 }
 
 .program-purchase-bottom > button {
   grid-column: auto;
-  min-width: 108px;
-  min-height: 36px;
+  min-width: 0;
+  min-height: 40px;
+  flex: 1 1 auto;
+  max-width: 100%;
   justify-content: center;
-  border-color: rgba(143, 214, 223, 0.2);
+  border-color: rgba(143, 214, 223, 0.22);
   background:
-    linear-gradient(135deg, rgba(143, 214, 223, 0.12), rgba(255, 255, 255, 0.06)),
+    linear-gradient(135deg, rgba(143, 214, 223, 0.14), rgba(255, 255, 255, 0.06)),
     rgba(255, 255, 255, 0.055);
-  color: rgba(220, 246, 249, 0.92);
-  padding: 0 14px;
+  color: rgba(220, 246, 249, 0.94);
+  padding: 0 16px;
   font-weight: 700;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09);
 }
 
 .program-purchase-bottom > button:hover {
-  border-color: rgba(143, 214, 223, 0.32);
+  border-color: rgba(143, 214, 223, 0.34);
   background:
-    linear-gradient(135deg, rgba(143, 214, 223, 0.18), rgba(255, 255, 255, 0.08)),
+    linear-gradient(135deg, rgba(143, 214, 223, 0.2), rgba(255, 255, 255, 0.08)),
     rgba(255, 255, 255, 0.075);
 }
 

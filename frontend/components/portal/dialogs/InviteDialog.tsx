@@ -41,9 +41,9 @@ export function InviteDialog({ onClose, notify, t }: { onClose: () => void; noti
     }
     let cancelled = false;
     void QRCode.toDataURL(inviteLink, {
-      width: 280,
-      margin: 1,
-      color: { dark: "#0c1212", light: "#ffffff" },
+      width: 320,
+      margin: 2,
+      color: { dark: "#0b1010", light: "#ffffff" },
       errorCorrectionLevel: "M",
     })
       .then((url) => {
@@ -79,13 +79,18 @@ export function InviteDialog({ onClose, notify, t }: { onClose: () => void; noti
     >
       <div className="invite-layout">
         <div className="invite-qr-block">
-          <div className="invite-qr-aura" aria-hidden />
           {qrDataUrl ? (
-            <img className="invite-qr" src={qrDataUrl} alt={t("QR-код приглашения")} width={156} height={156} />
+            <img
+              className="invite-qr"
+              src={qrDataUrl}
+              alt={t("QR-код приглашения")}
+              width={168}
+              height={168}
+            />
           ) : (
             <div className="invite-qr invite-qr--empty" aria-hidden />
           )}
-          <p>{t("Наведите камеру — откроется ваша ссылка")}</p>
+          <p>{t("Наведите камеру на код")}</p>
         </div>
 
         <div className="invite-main">

@@ -245,13 +245,13 @@
 }
 
 .invite-dialog {
-  width: min(680px, calc(100vw - 32px));
-  overflow-x: hidden;
+  width: min(640px, calc(100vw - 32px));
+  overflow-x: clip;
   overflow-y: auto;
   scrollbar-gutter: auto;
   background:
-    radial-gradient(ellipse 55% 70% at 18% 58%, rgba(143, 214, 223, 0.14), transparent 62%),
-    radial-gradient(circle at 92% 8%, rgba(80, 146, 255, 0.08), transparent 280px),
+    radial-gradient(ellipse 70% 80% at 12% 70%, rgba(143, 214, 223, 0.1), transparent 58%),
+    radial-gradient(circle at 100% 0%, rgba(80, 146, 255, 0.07), transparent 260px),
     rgba(17, 21, 21, 0.98);
 }
 
@@ -259,59 +259,42 @@
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 24px 28px;
+  gap: 28px 32px;
   min-width: 0;
   width: 100%;
-  overflow: hidden;
 }
 
 .invite-qr-block {
-  position: relative;
   display: grid;
   justify-items: center;
-  gap: 14px;
-  padding: 8px 4px;
-  overflow: hidden;
-  isolation: isolate;
+  gap: 12px;
   text-align: center;
 }
 
-.invite-qr-aura {
-  position: absolute;
-  inset: 18% 10% 28%;
-  z-index: 0;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(143, 214, 223, 0.22), transparent 72%);
-  filter: blur(14px);
-  pointer-events: none;
-}
-
 .invite-qr {
-  position: relative;
-  z-index: 1;
   display: block;
-  width: 156px;
-  height: 156px;
-  border-radius: 20px;
+  width: 168px;
+  height: 168px;
+  border: 0;
+  border-radius: 0;
   background: #ffffff;
-  box-shadow:
-    0 14px 32px rgba(0, 0, 0, 0.28),
-    0 0 0 1px rgba(255, 255, 255, 0.55);
+  box-shadow: none;
   object-fit: contain;
+  image-rendering: pixelated;
 }
 
 .invite-qr--empty {
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
-  box-shadow: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .invite-qr-block > p {
-  position: relative;
-  z-index: 1;
   margin: 0;
   max-width: 11rem;
-  color: rgba(247, 247, 243, 0.48);
-  font-size: 13px;
+  color: rgba(247, 247, 243, 0.45);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   line-height: 1.4;
 }
 
@@ -344,7 +327,7 @@
   justify-content: space-between;
   gap: 10px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.04);
   padding: 7px 7px 7px 14px;
   overflow: hidden;
@@ -371,7 +354,7 @@
   justify-content: center;
   gap: 7px;
   border: 0;
-  border-radius: 12px;
+  border-radius: 11px;
   background: rgba(255, 255, 255, 0.1);
   color: rgba(247, 247, 243, 0.88);
   padding: 0 12px;
@@ -393,9 +376,9 @@
 
 .invite-copy-message {
   width: 100%;
-  min-height: 48px;
+  min-height: 46px;
   border: 1px solid rgba(143, 214, 223, 0.16);
-  background: linear-gradient(135deg, rgba(143, 214, 223, 0.14), rgba(80, 146, 255, 0.08));
+  background: linear-gradient(135deg, rgba(143, 214, 223, 0.12), rgba(80, 146, 255, 0.06));
   color: #c5eef2;
   white-space: normal;
 }

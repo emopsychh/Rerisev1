@@ -33,8 +33,9 @@ export function CourseCard({
   const isCompleted = hasAccess && course.progress >= 100;
   const completedLessons = Math.round((course.lessons * course.progress) / 100);
   const requiredName = tariffDisplayName(course.requiredTariff);
+  const requiredLabel = requiredName ? t(`Нужен тариф ${requiredName}`) : t("Нужен тариф");
   const statusLabel = !hasAccess
-    ? (requiredName ? t(`Нужен ${requiredName}`) : t("Нужен тариф"))
+    ? requiredLabel
     : isCompleted
       ? t("Завершено")
       : isStarted
@@ -52,9 +53,11 @@ export function CourseCard({
         </div>
         <div className={`course-topline${hasAccess ? "" : " commercial"}`}>
           <span>{course.lessons} {t("уроков")}</span>
-          <em className={isCompleted ? "completed" : undefined}>
-            {!hasAccess ? <><Lock size={12} /> {statusLabel}</> : statusLabel}
-          </em>
+          {hasAccess ? (
+            <em className={isCompleted ? "completed" : undefined}>{statusLabel}</em>
+          ) : (
+            <em className="course-need-tariff"><Lock size={12} /> {requiredLabel}</em>
+          )}
         </div>
         <h3>{t(course.title)}</h3>
         <p>{t(course.subtitle)}</p>
@@ -78,14 +81,6 @@ export function CourseCard({
           </div>
         ) : (
           <div className="course-bottom program-purchase-bottom">
-            <div className="program-card-price">
-              <strong>{t("Закрыто")}</strong>
-              <small>
-                {requiredName
-                  ? t(`Минимальный тариф: ${requiredName}`)
-                  : t("Доступ после покупки партнёрского тарифа")}
-              </small>
-            </div>
             <button type="button" onClick={onUnlock ?? onOpen}>
               {requiredName ? t(`Выбрать ${requiredName}`) : t("Выбрать тариф")}
               <ShoppingBag size={15} />

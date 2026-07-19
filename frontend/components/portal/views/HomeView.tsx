@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { AlertTriangle, ArrowUpRight, CheckCircle2, ChevronRight, Play, Rocket, Search, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowUpRight, CheckCircle2, ChevronRight, Lock, Play, Rocket, Search, Sparkles } from "lucide-react";
 import { usePortalBackend } from "../../../lib/auth/PortalBackendProvider";
 import {
   courses,
@@ -344,6 +344,7 @@ export function HomeProgramCard({ program, onOpen, onBuy, t }: { program: HomePr
   const completedLessons = Math.round((lessons * progress) / 100);
   const hasSingleLineTitle = program.title === "Партнерские продажи";
   const requiredName = tariffDisplayName(program.requiredTariff || program.course?.requiredTariff);
+  const requiredLabel = requiredName ? t(`Нужен тариф ${requiredName}`) : t("Нужен тариф");
 
   return (
     <article className={`course-card ${program.color} ${program.hasAccess ? "program-owned" : "program-for-sale"} ${hasSingleLineTitle ? "program-single-line-title" : ""}`}>
@@ -361,7 +362,7 @@ export function HomeProgramCard({ program, onOpen, onBuy, t }: { program: HomePr
           <div className="course-topline commercial">
             <div className="course-commercial-tags">
               {program.badge ? <em>{program.badge}</em> : null}
-              <span>{requiredName ? t(`Нужен ${requiredName}`) : t("Нужен тариф")}</span>
+              <span className="course-need-tariff"><Lock size={12} /> {requiredLabel}</span>
             </div>
           </div>
         )}
@@ -377,10 +378,6 @@ export function HomeProgramCard({ program, onOpen, onBuy, t }: { program: HomePr
           </div>
         ) : (
           <div className="course-bottom program-purchase-bottom">
-            <div className="program-card-price">
-              <strong>{t("Закрыто")}</strong>
-              {requiredName ? <small>{t(`Минимальный тариф: ${requiredName}`)}</small> : null}
-            </div>
             <button type="button" onClick={onBuy}>
               {requiredName ? t(`Выбрать ${requiredName}`) : t("Выбрать тариф")}
               <ArrowUpRight size={15} />
