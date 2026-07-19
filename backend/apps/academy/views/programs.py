@@ -69,13 +69,8 @@ class ProgramDetailView(APIView):
                 status_code=status.HTTP_404_NOT_FOUND,
             )
 
-        if not user_has_program_access(request.user, program):
-            return error_response(
-                "FORBIDDEN",
-                "Нет доступа к этой программе",
-                status_code=status.HTTP_403_FORBIDDEN,
-            )
-
+        # Locked programs still return a card payload (no modules) so UI can show
+        # «нужен тариф» instead of a bare 403 with an empty page.
         return success_response(serialize_program_detail(program, request.user))
 
 

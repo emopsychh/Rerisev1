@@ -48,6 +48,7 @@ export function mapApiProgramToCourse(program: Record<string, unknown>) {
   const slug = String(program.slug || routeSlug(title));
   const mock = courses.find((course) => course.title === title || routeSlug(course.title) === slug);
   const progressObj = program.progress as { percent?: number } | null | undefined;
+  const accessStatus = String(program.access_status || "locked");
   return {
     slug,
     title,
@@ -56,6 +57,9 @@ export function mapApiProgramToCourse(program: Record<string, unknown>) {
     color: mock?.color ?? "blue",
     icon: mock?.icon ?? BookOpen,
     lessons: Number(program.lesson_count ?? 0),
+    accessStatus,
+    hasAccess: accessStatus !== "locked",
+    requiredTariff: program.required_tariff ? String(program.required_tariff) : null,
   };
 }
 

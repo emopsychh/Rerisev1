@@ -273,7 +273,7 @@ export function HomeView({ setActive, openCourse, openAiHub, t, notify }: { setA
               program={program}
               key={program.title}
               onOpen={() => program.course && openCourse(program.course.slug, "home", program.course.title)}
-              onBuy={() => openProgramPurchase(program)}
+              onBuy={() => (program.hasAccess ? openProgramPurchase(program) : setActive("marketplace"))}
               t={t}
             />
           ))}
@@ -357,7 +357,7 @@ export function HomeProgramCard({ program, onOpen, onBuy, t }: { program: HomePr
           <div className="course-topline commercial">
             <div className="course-commercial-tags">
               {program.badge ? <em>{program.badge}</em> : null}
-              <span>{t("Условия доступа уточняются")}</span>
+              <span>{t("Нужен тариф")}</span>
             </div>
           </div>
         )}
@@ -373,8 +373,8 @@ export function HomeProgramCard({ program, onOpen, onBuy, t }: { program: HomePr
           </div>
         ) : (
           <div className="course-bottom program-purchase-bottom">
-            <div className="program-card-price"><strong>{t("Скоро")}</strong></div>
-            <button type="button" onClick={onBuy}>{t("Подробнее")}<ArrowUpRight size={15} /></button>
+            <div className="program-card-price"><strong>{t("Закрыто")}</strong></div>
+            <button type="button" onClick={onBuy}>{t("Выбрать тариф")}<ArrowUpRight size={15} /></button>
           </div>
         )}
       </div>

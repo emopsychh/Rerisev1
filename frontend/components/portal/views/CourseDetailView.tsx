@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { BookOpen, Check, CheckCircle2, ChevronDown, Grid2X2, Play, ShieldCheck } from "lucide-react";
+import { BookOpen, Check, CheckCircle2, ChevronDown, Grid2X2, Lock, Play, ShieldCheck, ShoppingBag } from "lucide-react";
 import { completeLesson, fetchLesson, fetchProgram, startLesson } from "../../../lib/api/academy";
 import { ApiError } from "../../../lib/api/types";
 import { usePortalBackend } from "../../../lib/auth/PortalBackendProvider";
@@ -19,6 +19,8 @@ type ProgramDetail = {
   description: string;
   lesson_count: number;
   module_count: number;
+  access_status?: string;
+  required_tariff?: string | null;
   progress: {
     percent: number;
     completed_lessons: number;
@@ -284,6 +286,41 @@ export function CourseDetailView({
           <strong>{error || t("Программа не найдена")}</strong>
           <span>{t("Проверьте, что курс опубликован и доступен вашему тарифу.")}</span>
         </div>
+      </section>
+    );
+  }
+
+  const locked = program.access_status === "locked";
+
+  if (locked) {
+    return (
+      <section className="detail-layout">
+        <article className={`detail-hero ${color}`}>
+          <div>
+            <span className="detail-hero-eyebrow">{t("Академия RE:RISE")}</span>
+            <h2>{t(program.title)}</h2>
+            <p>{t(program.description || "")}</p>
+            <div className="detail-hero-facts">
+              <span><Lock size={15} />{t("Закрыто")}</span>
+              <span><BookOpen size={15} />{program.module_count} {t("модулей")}</span>
+              <span><Play size={15} />{program.lesson_count} {t("уроков")}</span>
+            </div>
+          </div>
+          <div className="detail-hero-icon" aria-hidden="true">
+            <Icon size={42} />
+          </div>
+        </article>
+        <section className="detail-list-card">
+          <div className="materials-empty">
+            <Lock size={28} />
+            <strong>{t("Нужен партнёрский тариф")}</strong>
+            <span>{t("Модули и уроки откроются после покупки тарифа с доступом к этой программе.")}</span>
+            <button type="button" onClick={() => router.push("/market/packages")}>
+              <ShoppingBag size={16} />
+              {t("Выбрать тариф")}
+            </button>
+          </div>
+        </section>
       </section>
     );
   }

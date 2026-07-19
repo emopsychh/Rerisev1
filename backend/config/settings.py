@@ -19,7 +19,7 @@ if _RUNNING_TESTS:
     ACADEMY_OPEN_ACCESS = False
 else:
     ACADEMY_OPEN_ACCESS = (
-        os.getenv("ACADEMY_OPEN_ACCESS", "true" if DEBUG else "false").lower() == "true"
+        os.getenv("ACADEMY_OPEN_ACCESS", "false").lower() == "true"
     )
 
 ALLOWED_HOSTS = [

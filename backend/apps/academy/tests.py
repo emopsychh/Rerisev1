@@ -108,9 +108,26 @@ class AcademyAPITestCase(AuthStoreTestMixin, TestCase):
         )
         self.assertEqual(user_progress.last_lesson_id, second.id)
 
-    def test_locked_program_returns_403(self):
+    def test_locked_program_returns_empty_modules(self):
         response = self.client.get("/api/v1/programs/ai-video")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["data"]
+        self.assertEqual(data["access_status"], "locked")
+        self.assertEqual(data["modules"], [])
+        self.assertIsNone(data["progress"])
+
+    def test_no_tariff_locks_all_programs(self):
+        self.register_user("notier@rerise.ai", first_name="Без", last_name="Тарифа")
+        self.login_user("notier@rerise.ai")
+        listing = self.client.get("/api/v1/programs")
+        self.assertEqual(listing.status_code, status.HTTP_200_OK)
+        for item in listing.data["data"]:
+            self.assertEqual(item["access_status"], "locked", item["slug"])
+
+        detail = self.client.get("/api/v1/programs/gpt-new")
+        self.assertEqual(detail.status_code, status.HTTP_200_OK)
+        self.assertEqual(detail.data["data"]["access_status"], "locked")
+        self.assertEqual(detail.data["data"]["modules"], [])
 
     def test_lesson_detail(self):
         lesson = Lesson.objects.filter(module__program__slug="gpt-new").first()

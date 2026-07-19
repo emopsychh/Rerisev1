@@ -235,7 +235,31 @@ def serialize_module_brief(
 
 
 def serialize_program_detail(program: Program, user) -> dict:
+    access_context = load_user_access_context(user)
     user_progress = UserProgress.objects.filter(user=user, program=program).first()
+    access_status = resolve_access_status(
+        user, program, user_progress, access_context=access_context
+    )
+    has_access = access_status != ACCESS_LOCKED
+
+    base = {
+        "id": program.id,
+        "slug": program.slug,
+        "title": program.title,
+        "description": program.description,
+        "lesson_count": program.lesson_count,
+        "module_count": program.module_count,
+        "access_status": access_status,
+        "required_tariff": program.required_tariff,
+        "required_product_id": program.required_product_id,
+    }
+
+    if not has_access:
+        return {
+            **base,
+            "progress": None,
+            "modules": [],
+        }
 
     lesson_ids = []
     module_ids = []
@@ -278,14 +302,17 @@ def serialize_program_detail(program: Program, user) -> dict:
             "status": user_progress.status,
             "last_lesson": last_lesson_payload,
         }
+    else:
+        progress_payload = {
+            "percent": 0,
+            "completed_lessons": 0,
+            "completed_modules": 0,
+            "status": STATUS_NOT_STARTED,
+            "last_lesson": None,
+        }
 
     return {
-        "id": program.id,
-        "slug": program.slug,
-        "title": program.title,
-        "description": program.description,
-        "lesson_count": program.lesson_count,
-        "module_count": program.module_count,
+        **base,
         "progress": progress_payload,
         "modules": modules_payload,
     }
